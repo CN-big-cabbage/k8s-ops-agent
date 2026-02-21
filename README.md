@@ -1,5 +1,7 @@
 # OpenClaw Kubernetes Plugin
 
+English | [简体中文](README_CN.md)
+
 Kubernetes operations plugin for OpenClaw, providing tools to manage K8s resources.
 
 ## Features
