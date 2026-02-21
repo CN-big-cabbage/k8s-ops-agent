@@ -1,0 +1,18 @@
+{
+  "id": "k8s",
+  "skills": ["./skills"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "kubeconfigPath": {
+        "type": "string",
+        "description": "Custom path to kubeconfig file (defaults to ~/.kube/config)"
+      },
+      "defaultContext": {
+        "type": "string",
+        "description": "Default Kubernetes context to use"
+      }
+    }
+  }
+}
