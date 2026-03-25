@@ -1,6 +1,10 @@
 import * as k8s from "@kubernetes/client-node";
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
 import { z } from "zod";
+import { createK8sClients } from "../../../lib/client.js";
+import { formatAge, formatTable } from "../../../lib/format.js";
+import { wrapK8sError } from "../../../lib/errors.js";
+import type { PluginConfig } from "../../../lib/types.js";
 
 // Zod schema for k8s_pod tool parameters
 const K8sPodSchema = z.object({
@@ -16,29 +20,6 @@ const K8sPodSchema = z.object({
 });
 
 type K8sPodParams = z.infer<typeof K8sPodSchema>;
-
-let kc: k8s.KubeConfig;
-let k8sApi: k8s.CoreV1Api;
-
-function initializeK8sClient(customKubeconfigPath?: string, customContext?: string) {
-  if (!kc) {
-    kc = new k8s.KubeConfig();
-
-    if (customKubeconfigPath) {
-      kc.loadFromFile(customKubeconfigPath);
-    } else {
-      kc.loadFromDefault();
-    }
-
-    if (customContext) {
-      kc.setCurrentContext(customContext);
-    }
-
-    k8sApi = kc.makeApiClient(k8s.CoreV1Api);
-  }
-
-  return { kc, k8sApi };
-}
 
 function formatPodList(pods: k8s.V1Pod[]): string {
   if (pods.length === 0) {
@@ -158,45 +139,9 @@ function formatPodDescribe(pod: k8s.V1Pod, events?: k8s.CoreV1Event[]): string {
   return result;
 }
 
-function formatAge(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHour = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHour / 24);
-
-  if (diffDay > 0) return `${diffDay}d`;
-  if (diffHour > 0) return `${diffHour}h`;
-  if (diffMin > 0) return `${diffMin}m`;
-  return `${diffSec}s`;
-}
-
-function formatTable(headers: string[], rows: string[][]): string {
-  // Calculate column widths
-  const colWidths = headers.map((h, i) => {
-    const maxRowWidth = Math.max(...rows.map((r) => (r[i] || "").length));
-    return Math.max(h.length, maxRowWidth);
-  });
-
-  // Format header
-  const headerRow = headers.map((h, i) => h.padEnd(colWidths[i])).join("  ");
-  const separator = colWidths.map((w) => "-".repeat(w)).join("  ");
-
-  // Format rows
-  const dataRows = rows.map((row) =>
-    row.map((cell, i) => (cell || "").padEnd(colWidths[i])).join("  ")
-  );
-
-  return [headerRow, separator, ...dataRows].join("\n");
-}
-
-async function handleK8sPod(params: K8sPodParams, pluginConfig?: any): Promise<string> {
+async function handleK8sPod(params: K8sPodParams, pluginConfig?: PluginConfig): Promise<string> {
   try {
-    const { k8sApi } = initializeK8sClient(
-      pluginConfig?.kubeconfigPath,
-      params.context || pluginConfig?.defaultContext
-    );
+    const { coreApi } = createK8sClients(pluginConfig, params.context);
 
     const namespace = params.namespace || "default";
 
@@ -205,7 +150,7 @@ async function handleK8sPod(params: K8sPodParams, pluginConfig?: any): Promise<s
         let pods: k8s.V1Pod[];
 
         if (params.all_namespaces) {
-          const response = await k8sApi.listPodForAllNamespaces(
+          const response = await coreApi.listPodForAllNamespaces(
             undefined,
             undefined,
             undefined,
@@ -213,7 +158,7 @@ async function handleK8sPod(params: K8sPodParams, pluginConfig?: any): Promise<s
           );
           pods = response.body.items;
         } else {
-          const response = await k8sApi.listNamespacedPod(
+          const response = await coreApi.listNamespacedPod(
             namespace,
             undefined,
             undefined,
@@ -232,7 +177,7 @@ async function handleK8sPod(params: K8sPodParams, pluginConfig?: any): Promise<s
           throw new Error("pod_name is required for status action");
         }
 
-        const response = await k8sApi.readNamespacedPod(params.pod_name, namespace);
+        const response = await coreApi.readNamespacedPod(params.pod_name, namespace);
         return formatPodStatus(response.body);
       }
 
@@ -241,12 +186,12 @@ async function handleK8sPod(params: K8sPodParams, pluginConfig?: any): Promise<s
           throw new Error("pod_name is required for describe action");
         }
 
-        const podResponse = await k8sApi.readNamespacedPod(params.pod_name, namespace);
+        const podResponse = await coreApi.readNamespacedPod(params.pod_name, namespace);
 
         // Fetch events
         let events: k8s.CoreV1Event[] = [];
         try {
-          const eventsResponse = await k8sApi.listNamespacedEvent(
+          const eventsResponse = await coreApi.listNamespacedEvent(
             namespace,
             undefined,
             undefined,
@@ -266,7 +211,7 @@ async function handleK8sPod(params: K8sPodParams, pluginConfig?: any): Promise<s
           throw new Error("pod_name is required for logs action");
         }
 
-        const logResponse = await k8sApi.readNamespacedPodLog(
+        const logResponse = await coreApi.readNamespacedPodLog(
           params.pod_name,
           namespace,
           params.container,
@@ -288,18 +233,15 @@ async function handleK8sPod(params: K8sPodParams, pluginConfig?: any): Promise<s
           throw new Error("pod_name is required for restart action");
         }
 
-        await k8sApi.deleteNamespacedPod(params.pod_name, namespace);
+        await coreApi.deleteNamespacedPod(params.pod_name, namespace);
         return `Pod ${namespace}/${params.pod_name} deleted successfully. It will be recreated by its controller.`;
       }
 
       default:
         throw new Error(`Unknown action: ${params.action}`);
     }
-  } catch (error: any) {
-    if (error.response?.body?.message) {
-      throw new Error(`Kubernetes API error: ${error.response.body.message}`);
-    }
-    throw error;
+  } catch (error: unknown) {
+    throw new Error(wrapK8sError(error, `pod ${params.action}`));
   }
 }
 
