@@ -6,18 +6,19 @@ Kubernetes operations plugin for OpenClaw, providing tools to manage K8s resourc
 
 ## Features
 
-### Current Skills
+### Skills (6 tools)
 
 - **k8s-pod**: Pod management (list, describe, logs, restart, status)
 - **k8s-deploy**: Deployment management (list, describe, scale, rollout status/history/restart/undo, update-image)
+- **k8s-node**: Node management (list, describe, status, cordon, uncordon, drain, taints, labels)
+- **k8s-svc**: Service management (list, describe, endpoints, status)
+- **k8s-exec**: Container execution (exec, file_read, file_list, env, process_list, network_check)
+- **k8s-logs**: Advanced log operations (search, multi_pod, since, compare, stats, export)
 
 ### Planned Skills
 
-- **k8s-logs**: Advanced log queries and aggregation
 - **k8s-metrics**: Resource metrics and monitoring
 - **k8s-events**: Event monitoring and anomaly detection
-- **k8s-node**: Node management and health checks
-- **k8s-svc**: Service and Ingress management
 
 ## Installation
 
@@ -104,6 +105,50 @@ Agent will use:
 { "action": "restart", "namespace": "staging", "pod_name": "frontend-app-xyz" }
 ```
 
+### Execute Command in Container
+
+```
+Check what's in /etc/nginx on the nginx pod
+```
+
+Agent will use:
+```json
+{ "action": "exec", "namespace": "default", "pod_name": "nginx-abc123", "command": "ls -la /etc/nginx" }
+```
+
+### Search Logs
+
+```
+Search for errors in api-server logs
+```
+
+Agent will use:
+```json
+{ "action": "search", "namespace": "default", "pod_name": "api-server-xyz", "pattern": "ERROR|WARN", "tail_lines": 500 }
+```
+
+### Multi-Pod Log Aggregation
+
+```
+Show me logs from all api pods
+```
+
+Agent will use:
+```json
+{ "action": "multi_pod", "namespace": "production", "label_selector": "app=api-server", "tail_lines": 100 }
+```
+
+### Network Connectivity Check
+
+```
+Can the app pod reach redis?
+```
+
+Agent will use:
+```json
+{ "action": "network_check", "namespace": "default", "pod_name": "app-abc123", "target_host": "redis-service", "target_port": 6379 }
+```
+
 ## Configuration in TOOLS.md
 
 Add cluster-specific notes to `~/.openclaw/workspace/TOOLS.md`:
@@ -147,11 +192,23 @@ metadata:
   namespace: default
 rules:
   - apiGroups: [""]
-    resources: ["pods", "pods/log"]
-    verbs: ["get", "list", "watch"]
+    resources: ["pods", "pods/log", "pods/exec"]
+    verbs: ["get", "list", "watch", "create"]
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["delete"]  # For restart action
+  - apiGroups: [""]
+    resources: ["pods/eviction"]
+    verbs: ["create"]  # For node drain
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "patch", "update"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "patch"]
+  - apiGroups: [""]
+    resources: ["services", "endpoints"]
+    verbs: ["get", "list"]
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["get", "list"]
@@ -165,7 +222,7 @@ Build the plugin:
 npm run build
 ```
 
-Run tests (when implemented):
+Run tests:
 
 ```bash
 npm test
@@ -206,9 +263,7 @@ kubectl get namespaces
 - [ ] Interactive pod selection (fuzzy search)
 - [ ] Log streaming (real-time tail)
 - [ ] Resource metrics integration (kubectl top)
-- [ ] Deployment rollout management
 - [ ] ConfigMap/Secret viewing
-- [ ] Exec into containers
 - [ ] Port forwarding
 - [ ] Integration with Prometheus for metrics
 - [ ] Alert integration (auto-respond to pod failures)

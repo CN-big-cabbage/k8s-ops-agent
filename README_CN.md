@@ -6,16 +6,17 @@ OpenClaw 的 Kubernetes 运维插件，提供 K8s 资源管理工具。
 
 ## 功能特性
 
-### 当前 Skills
+### Skills（6 个工具）
 
 - **k8s-pod**: Pod 管理（列表、详情、日志、重启、状态）
 - **k8s-deploy**: Deployment 管理（列表、详情、扩缩容、滚动更新状态/历史/重启/回滚、更新镜像）
-- **k8s-node**: Node 管理（列表、详情、污点操作、标签管理、驱逐、封锁/解封）
-- **k8s-svc**: Service 管理（列表、详情、端点查询、创建/删除、端口转发）
+- **k8s-node**: Node 管理（列表、详情、状态、封锁/解封、驱逐、污点、标签）
+- **k8s-svc**: Service 管理（列表、详情、端点查询、状态）
+- **k8s-exec**: 容器执行（执行命令、读取文件、列出目录、查看环境变量、进程列表、网络连通性检查）
+- **k8s-logs**: 高级日志操作（搜索、多 Pod 聚合、时间范围过滤、对比、统计、导出）
 
 ### 计划中的 Skills
 
-- **k8s-logs**: 高级日志查询和聚合
 - **k8s-metrics**: 资源指标和监控
 - **k8s-events**: 事件监控和异常检测
 
@@ -160,14 +161,68 @@ Agent 将使用：
 
 ### Service 管理
 
-#### 端口转发
+#### 查看端点
 
 ```
-转发 redis-service 的 6379 端口到本地 6379
+检查 redis-service 的后端端点
 ```
 
 ```json
-{ "action": "port-forward", "namespace": "default", "service_name": "redis-service", "port": "6379:6379" }
+{ "action": "endpoints", "namespace": "default", "service_name": "redis-service" }
+```
+
+### 容器执行
+
+#### 在容器中执行命令
+
+```
+查看 nginx pod 中 /etc/nginx 目录的内容
+```
+
+```json
+{ "action": "exec", "namespace": "default", "pod_name": "nginx-abc123", "command": "ls -la /etc/nginx" }
+```
+
+#### 网络连通性检查
+
+```
+检查 app pod 是否能连接到 redis
+```
+
+```json
+{ "action": "network_check", "namespace": "default", "pod_name": "app-abc123", "target_host": "redis-service", "target_port": 6379 }
+```
+
+### 高级日志
+
+#### 搜索日志
+
+```
+搜索 api-server 日志中的错误
+```
+
+```json
+{ "action": "search", "namespace": "default", "pod_name": "api-server-xyz", "pattern": "ERROR|WARN", "tail_lines": 500 }
+```
+
+#### 多 Pod 日志聚合
+
+```
+显示所有 api pod 的日志
+```
+
+```json
+{ "action": "multi_pod", "namespace": "production", "label_selector": "app=api-server", "tail_lines": 100 }
+```
+
+#### 日志统计
+
+```
+分析 api-server 的日志模式
+```
+
+```json
+{ "action": "stats", "namespace": "default", "pod_name": "api-server-xyz", "tail_lines": 1000 }
 ```
 
 ## 在 TOOLS.md 中配置
@@ -213,20 +268,23 @@ metadata:
   namespace: default
 rules:
   - apiGroups: [""]
-    resources: ["pods", "pods/log"]
-    verbs: ["get", "list", "watch"]
+    resources: ["pods", "pods/log", "pods/exec"]
+    verbs: ["get", "list", "watch", "create"]
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["delete"]  # 用于重启操作
+  - apiGroups: [""]
+    resources: ["pods/eviction"]
+    verbs: ["create"]  # 用于节点驱逐
   - apiGroups: ["apps"]
-    resources: ["deployments"]
-    verbs: ["get", "list", "patch"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "patch", "update"]
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "patch"]
   - apiGroups: [""]
-    resources: ["services"]
-    verbs: ["get", "list", "create", "delete"]
+    resources: ["services", "endpoints"]
+    verbs: ["get", "list"]
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["get", "list"]
@@ -240,7 +298,7 @@ rules:
 npm run build
 ```
 
-运行测试（待实现）：
+运行测试：
 
 ```bash
 npm test
@@ -282,7 +340,6 @@ kubectl get namespaces
 - [ ] 日志流式传输（实时 tail）
 - [ ] 资源指标集成（kubectl top）
 - [ ] ConfigMap/Secret 查看
-- [ ] 进入容器执行命令
 - [ ] 与 Prometheus 集成获取指标
 - [ ] 告警集成（自动响应 pod 故障）
 - [ ] HPA（水平自动扩缩容）管理
