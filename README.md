@@ -6,7 +6,7 @@ Kubernetes operations plugin for OpenClaw, providing tools to manage K8s resourc
 
 ## Features
 
-### Skills (7 tools)
+### Skills (9 tools)
 
 - **k8s-pod**: Pod management (list, describe, logs, restart, status)
 - **k8s-deploy**: Deployment management (list, describe, scale, rollout status/history/restart/undo, update-image)
@@ -15,10 +15,8 @@ Kubernetes operations plugin for OpenClaw, providing tools to manage K8s resourc
 - **k8s-exec**: Container execution (exec, file_read, file_list, env, process_list, network_check)
 - **k8s-logs**: Advanced log operations (search, multi_pod, since, compare, stats, export)
 - **k8s-metrics**: Resource metrics and monitoring (pod_resources, node_resources, top_pods, top_nodes, namespace_usage, capacity_report)
-
-### Planned Skills
-
-- **k8s-events**: Event monitoring and anomaly detection
+- **k8s-events**: Event querying (list, filter, recent, export)
+- **k8s-event-analysis**: Event analysis (timeline, anomaly, correlate, summary)
 
 ## Installation
 
@@ -169,6 +167,39 @@ Give me a cluster capacity report
 Agent will use:
 ```json
 { "action": "capacity_report" }
+```
+
+### Event Monitoring
+
+```
+Show me recent warning events in production
+```
+
+Agent will use:
+```json
+{ "action": "filter", "namespace": "production", "event_type": "Warning" }
+```
+
+### Anomaly Detection
+
+```
+Check for anomalies in the default namespace
+```
+
+Agent will use:
+```json
+{ "action": "anomaly", "namespace": "default", "warning_threshold": 5 }
+```
+
+### Event Correlation
+
+```
+Correlate events for the api-server pod
+```
+
+Agent will use:
+```json
+{ "action": "correlate", "namespace": "production", "resource_kind": "Pod", "resource_name": "api-server-abc123" }
 ```
 
 ## Configuration in TOOLS.md

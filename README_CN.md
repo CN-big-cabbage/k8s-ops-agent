@@ -6,7 +6,7 @@ OpenClaw 的 Kubernetes 运维插件，提供 K8s 资源管理工具。
 
 ## 功能特性
 
-### Skills（7 个工具）
+### Skills（9 个工具）
 
 - **k8s-pod**: Pod 管理（列表、详情、日志、重启、状态）
 - **k8s-deploy**: Deployment 管理（列表、详情、扩缩容、滚动更新状态/历史/重启/回滚、更新镜像）
@@ -15,10 +15,8 @@ OpenClaw 的 Kubernetes 运维插件，提供 K8s 资源管理工具。
 - **k8s-exec**: 容器执行（执行命令、读取文件、列出目录、查看环境变量、进程列表、网络连通性检查）
 - **k8s-logs**: 高级日志操作（搜索、多 Pod 聚合、时间范围过滤、对比、统计、导出）
 - **k8s-metrics**: 资源指标监控（Pod 资源、Node 资源、Pod 排行、Node 排行、命名空间用量、容量报告）
-
-### 计划中的 Skills
-
-- **k8s-events**: 事件监控和异常检测
+- **k8s-events**: 事件查询（列表、过滤、最近事件、导出）
+- **k8s-event-analysis**: 事件分析（时间线、异常检测、关联分析、健康摘要）
 
 ## 安装
 
@@ -245,6 +243,38 @@ Agent 将使用：
 
 ```json
 { "action": "capacity_report" }
+```
+
+### 事件监控
+
+#### 查看告警事件
+
+```
+查看 production 命名空间的 Warning 事件
+```
+
+```json
+{ "action": "filter", "namespace": "production", "event_type": "Warning" }
+```
+
+#### 异常检测
+
+```
+检查 default 命名空间的异常
+```
+
+```json
+{ "action": "anomaly", "namespace": "default", "warning_threshold": 5 }
+```
+
+#### 事件关联分析
+
+```
+关联分析 api-server Pod 的事件链
+```
+
+```json
+{ "action": "correlate", "namespace": "production", "resource_kind": "Pod", "resource_name": "api-server-abc123" }
 ```
 
 ## 在 TOOLS.md 中配置
