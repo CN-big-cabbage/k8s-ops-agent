@@ -6,7 +6,7 @@ Kubernetes operations plugin for OpenClaw, providing tools to manage K8s resourc
 
 ## Features
 
-### Skills (6 tools)
+### Skills (7 tools)
 
 - **k8s-pod**: Pod management (list, describe, logs, restart, status)
 - **k8s-deploy**: Deployment management (list, describe, scale, rollout status/history/restart/undo, update-image)
@@ -14,10 +14,10 @@ Kubernetes operations plugin for OpenClaw, providing tools to manage K8s resourc
 - **k8s-svc**: Service management (list, describe, endpoints, status)
 - **k8s-exec**: Container execution (exec, file_read, file_list, env, process_list, network_check)
 - **k8s-logs**: Advanced log operations (search, multi_pod, since, compare, stats, export)
+- **k8s-metrics**: Resource metrics and monitoring (pod_resources, node_resources, top_pods, top_nodes, namespace_usage, capacity_report)
 
 ### Planned Skills
 
-- **k8s-metrics**: Resource metrics and monitoring
 - **k8s-events**: Event monitoring and anomaly detection
 
 ## Installation
@@ -149,6 +149,28 @@ Agent will use:
 { "action": "network_check", "namespace": "default", "pod_name": "app-abc123", "target_host": "redis-service", "target_port": 6379 }
 ```
 
+### Resource Metrics
+
+```
+Show me top pods by CPU usage in production
+```
+
+Agent will use:
+```json
+{ "action": "top_pods", "namespace": "production", "sort_by": "cpu", "top_n": 10 }
+```
+
+### Capacity Report
+
+```
+Give me a cluster capacity report
+```
+
+Agent will use:
+```json
+{ "action": "capacity_report" }
+```
+
 ## Configuration in TOOLS.md
 
 Add cluster-specific notes to `~/.openclaw/workspace/TOOLS.md`:
@@ -212,6 +234,9 @@ rules:
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["get", "list"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list"]
 ```
 
 ## Development
@@ -262,7 +287,7 @@ kubectl get namespaces
 - [ ] Support for multiple kubeconfig files
 - [ ] Interactive pod selection (fuzzy search)
 - [ ] Log streaming (real-time tail)
-- [ ] Resource metrics integration (kubectl top)
+- [x] Resource metrics integration (kubectl top)
 - [ ] ConfigMap/Secret viewing
 - [ ] Port forwarding
 - [ ] Integration with Prometheus for metrics

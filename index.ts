@@ -5,6 +5,7 @@ import { registerK8sNodeTools } from "./skills/k8s-node/src/node.js";
 import { registerK8sSvcTools } from "./skills/k8s-svc/src/svc.js";
 import { registerK8sExecTools } from "./skills/k8s-exec/src/exec.js";
 import { registerK8sLogsTools } from "./skills/k8s-logs/src/logs.js";
+import { registerK8sMetricsTools } from "./skills/k8s-metrics/src/metrics.js";
 
 const plugin = {
   id: "k8s",
@@ -18,8 +19,9 @@ const plugin = {
     registerK8sSvcTools(api);
     registerK8sExecTools(api);
     registerK8sLogsTools(api);
+    registerK8sMetricsTools(api);
 
-    api.log("K8s plugin loaded successfully - 6 skills registered");
+    api.log("K8s plugin loaded successfully - 7 skills registered");
   },
 };
 

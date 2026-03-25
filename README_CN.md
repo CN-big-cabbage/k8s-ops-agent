@@ -6,7 +6,7 @@ OpenClaw 的 Kubernetes 运维插件，提供 K8s 资源管理工具。
 
 ## 功能特性
 
-### Skills（6 个工具）
+### Skills（7 个工具）
 
 - **k8s-pod**: Pod 管理（列表、详情、日志、重启、状态）
 - **k8s-deploy**: Deployment 管理（列表、详情、扩缩容、滚动更新状态/历史/重启/回滚、更新镜像）
@@ -14,10 +14,10 @@ OpenClaw 的 Kubernetes 运维插件，提供 K8s 资源管理工具。
 - **k8s-svc**: Service 管理（列表、详情、端点查询、状态）
 - **k8s-exec**: 容器执行（执行命令、读取文件、列出目录、查看环境变量、进程列表、网络连通性检查）
 - **k8s-logs**: 高级日志操作（搜索、多 Pod 聚合、时间范围过滤、对比、统计、导出）
+- **k8s-metrics**: 资源指标监控（Pod 资源、Node 资源、Pod 排行、Node 排行、命名空间用量、容量报告）
 
 ### 计划中的 Skills
 
-- **k8s-metrics**: 资源指标和监控
 - **k8s-events**: 事件监控和异常检测
 
 ## 安装
@@ -225,6 +225,28 @@ Agent 将使用：
 { "action": "stats", "namespace": "default", "pod_name": "api-server-xyz", "tail_lines": 1000 }
 ```
 
+### 资源指标
+
+#### 查看 Pod 资源用量排行
+
+```
+查看 production 命名空间中 CPU 占用最高的 Pod
+```
+
+```json
+{ "action": "top_pods", "namespace": "production", "sort_by": "cpu", "top_n": 10 }
+```
+
+#### 集群容量报告
+
+```
+生成集群容量报告
+```
+
+```json
+{ "action": "capacity_report" }
+```
+
 ## 在 TOOLS.md 中配置
 
 在 `~/.openclaw/workspace/TOOLS.md` 中添加集群特定的说明：
@@ -288,6 +310,9 @@ rules:
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["get", "list"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list"]
 ```
 
 ## 开发
@@ -338,7 +363,7 @@ kubectl get namespaces
 - [ ] 支持多个 kubeconfig 文件
 - [ ] 交互式 pod 选择（模糊搜索）
 - [ ] 日志流式传输（实时 tail）
-- [ ] 资源指标集成（kubectl top）
+- [x] 资源指标集成（kubectl top）
 - [ ] ConfigMap/Secret 查看
 - [ ] 与 Prometheus 集成获取指标
 - [ ] 告警集成（自动响应 pod 故障）
