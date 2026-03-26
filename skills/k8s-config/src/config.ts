@@ -114,19 +114,18 @@ function formatSecretDescribe(secret: k8s.V1Secret): string {
     });
   }
 
-  result += `\n--- Data (base64 decoded) ---\n`;
+  result += `\n--- Data Keys ---\n`;
   const data = secret.data || {};
   if (Object.keys(data).length === 0) {
     result += "  (empty)\n";
   } else {
     Object.entries(data).forEach(([k, v]) => {
       const decoded = base64Decode(v || "");
-      const displayValue = decoded.length > 100 ? decoded.substring(0, 100) + "..." : decoded;
-      result += `  ${k}: ${displayValue}\n`;
+      result += `  ${k} (${decoded.length} bytes)\n`;
     });
   }
 
-  result += `\nNote: Run 'get_secret_data' action to view specific keys.`;
+  result += `\nUse 'get_secret_data' action with 'key' parameter to view a specific key's value.`;
 
   return result;
 }
@@ -248,15 +247,12 @@ async function handleK8sConfig(params: K8sConfigParams, pluginConfig?: PluginCon
           return "(empty Secret)";
         }
 
-        // Without a specific key, show masked values to avoid leaking secrets
+        // Without a specific key, show only key names and sizes to avoid leaking secrets
         let result = `Secret: ${namespace}/${params.secret_name}\n`;
-        result += `--- Data (masked) ---\n`;
+        result += `--- Data Keys ---\n`;
         Object.entries(data).forEach(([k, v]) => {
           const decoded = base64Decode(v || "");
-          const masked = decoded.length > 4
-            ? decoded.substring(0, 4) + "****"
-            : "****";
-          result += `${k}: ${masked} (${decoded.length} chars)\n`;
+          result += `${k} (${decoded.length} bytes)\n`;
         });
         result += `\nUse 'key' parameter to view full value of a specific key.`;
         return result;

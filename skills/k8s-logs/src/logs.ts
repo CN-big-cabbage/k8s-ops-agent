@@ -7,7 +7,7 @@ import { wrapK8sError } from "../../../lib/errors.js";
 import type { PluginConfig } from "../../../lib/types.js";
 import { DEFAULT_NAMESPACE, DEFAULT_LOG_LINES, MAX_LOG_LINES } from "../../../lib/types.js";
 
-const K8sLogsSchema = z.object({
+export const K8sLogsSchema = z.object({
   action: z.enum(["search", "multi_pod", "since", "compare", "stats", "export"]),
   namespace: z.string().default(DEFAULT_NAMESPACE),
   pod_name: z.string().optional(),
@@ -22,7 +22,7 @@ const K8sLogsSchema = z.object({
 
 type K8sLogsParams = z.infer<typeof K8sLogsSchema>;
 
-function parseRelativeTime(timeStr: string): Date {
+export function parseRelativeTime(timeStr: string): Date {
   const match = timeStr.match(/^(\d+)(s|m|h|d)$/);
   if (!match) {
     // Try ISO 8601

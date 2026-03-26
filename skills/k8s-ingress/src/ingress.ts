@@ -271,9 +271,9 @@ async function handleK8sIngress(params: K8sIngressParams, pluginConfig?: PluginC
                 backend: {
                   service: {
                     name: p.service,
-                    port: {
-                      number: typeof p.service_port === 'number' ? p.service_port : 80,
-                    },
+                    port: typeof p.service_port === 'number'
+                      ? { number: p.service_port }
+                      : { name: p.service_port },
                   },
                 },
               })),

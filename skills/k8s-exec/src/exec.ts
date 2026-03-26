@@ -8,7 +8,7 @@ import type { PluginConfig } from "../../../lib/types.js";
 import { MAX_OUTPUT_BYTES, EXEC_TIMEOUT_MS, DEFAULT_NAMESPACE } from "../../../lib/types.js";
 import * as stream from "stream";
 
-const K8sExecSchema = z.object({
+export const K8sExecSchema = z.object({
   action: z.enum(["exec", "file_read", "file_list", "env", "process_list", "network_check"]),
   namespace: z.string().default(DEFAULT_NAMESPACE),
   pod_name: z.string(),
@@ -16,7 +16,9 @@ const K8sExecSchema = z.object({
   command: z.string().optional(),
   file_path: z.string().optional(),
   directory: z.string().default("/"),
-  target_host: z.string().optional(),
+  target_host: z.string()
+    .regex(/^[a-zA-Z0-9]([a-zA-Z0-9\-_.]*[a-zA-Z0-9])?$/, "Invalid hostname format: only alphanumeric, hyphens, dots, and underscores allowed")
+    .optional(),
   target_port: z.number().int().positive().optional(),
   context: z.string().optional(),
 });
@@ -80,9 +82,11 @@ async function execInPod(
   });
 }
 
-function buildExecCommand(params: K8sExecParams): string[] {
+export function buildExecCommand(params: K8sExecParams): string[] {
   switch (params.action) {
     case "exec":
+      // NOTE: exec intentionally passes user commands to sh -c.
+      // This action is gated by the LLM permission layer.
       if (!params.command) throw new Error("command is required for exec action");
       return ["sh", "-c", params.command];
 
@@ -101,16 +105,15 @@ function buildExecCommand(params: K8sExecParams): string[] {
 
     case "network_check": {
       if (!params.target_host) throw new Error("target_host is required for network_check action");
-      const port = params.target_port || 80;
+      const port = String(params.target_port || 80);
       const host = params.target_host;
-      // Try multiple tools in order of availability
+      // Pass host and port as positional args ($0, $1) to avoid shell injection
       return [
         "sh",
         "-c",
-        `if command -v curl >/dev/null 2>&1; then curl -sf --connect-timeout 5 -o /dev/null -w "Connected to ${host}:${port} (HTTP %{http_code}) in %{time_connect}s" "http://${host}:${port}" 2>&1 || curl -sf --connect-timeout 5 -o /dev/null "http://${host}:${port}" 2>&1; ` +
-        `elif command -v wget >/dev/null 2>&1; then wget -q --timeout=5 --spider "http://${host}:${port}" 2>&1 && echo "Connected to ${host}:${port}" || echo "Failed to connect to ${host}:${port}"; ` +
-        `elif command -v nc >/dev/null 2>&1; then nc -zv -w5 "${host}" ${port} 2>&1; ` +
-        `else echo "No network tools available (curl/wget/nc not found)"; fi`,
+        'H="$0"; P="$1"; if command -v curl >/dev/null 2>&1; then curl -sf --connect-timeout 5 -o /dev/null -w "Connected to $H:$P (HTTP %{http_code}) in %{time_connect}s" "http://$H:$P" 2>&1 || echo "Failed to connect to $H:$P"; elif command -v wget >/dev/null 2>&1; then wget -q --timeout=5 --spider "http://$H:$P" 2>&1 && echo "Connected to $H:$P" || echo "Failed to connect to $H:$P"; elif command -v nc >/dev/null 2>&1; then nc -zv -w5 "$H" "$P" 2>&1; else echo "No network tools available (curl/wget/nc not found)"; fi',
+        host,
+        port,
       ];
     }
 

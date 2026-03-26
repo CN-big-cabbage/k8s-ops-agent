@@ -7,7 +7,7 @@ import { wrapK8sError } from "../../../lib/errors.js";
 import type { PluginConfig } from "../../../lib/types.js";
 
 // Zod schema for k8s_pod tool parameters
-const K8sPodSchema = z.object({
+export const K8sPodSchema = z.object({
   action: z.enum(["list", "describe", "logs", "restart", "status"]),
   namespace: z.string().optional(),
   pod_name: z.string().optional(),
@@ -139,7 +139,7 @@ function formatPodDescribe(pod: k8s.V1Pod, events?: k8s.CoreV1Event[]): string {
   return result;
 }
 
-async function handleK8sPod(params: K8sPodParams, pluginConfig?: PluginConfig): Promise<string> {
+export async function handleK8sPod(params: K8sPodParams, pluginConfig?: PluginConfig): Promise<string> {
   try {
     const { coreApi } = createK8sClients(pluginConfig, params.context);
 
@@ -233,8 +233,21 @@ async function handleK8sPod(params: K8sPodParams, pluginConfig?: PluginConfig): 
           throw new Error("pod_name is required for restart action");
         }
 
+        const podInfo = await coreApi.readNamespacedPod(params.pod_name, namespace);
+        const ownerRefs = podInfo.body.metadata?.ownerReferences || [];
+        const hasController = ownerRefs.some(ref => ref.controller === true);
+
+        if (!hasController) {
+          throw new Error(
+            `Pod ${namespace}/${params.pod_name} has no controller (ownerReferences). ` +
+            `Deleting it will permanently remove this pod. ` +
+            `This pod is standalone and will NOT be recreated automatically.`
+          );
+        }
+
         await coreApi.deleteNamespacedPod(params.pod_name, namespace);
-        return `Pod ${namespace}/${params.pod_name} deleted successfully. It will be recreated by its controller.`;
+        const controllerKind = ownerRefs.find(ref => ref.controller)?.kind || "controller";
+        return `Pod ${namespace}/${params.pod_name} deleted. It will be recreated by its ${controllerKind}.`;
       }
 
       default:
