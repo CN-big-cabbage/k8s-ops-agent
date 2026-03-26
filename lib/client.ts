@@ -5,6 +5,8 @@ export interface K8sClients {
   kc: k8s.KubeConfig;
   coreApi: k8s.CoreV1Api;
   appsApi: k8s.AppsV1Api;
+  networkingApi: k8s.NetworkingV1Api;
+  storageApi: k8s.StorageV1Api;
 }
 
 const clientCache = new Map<string, K8sClients>();
@@ -39,6 +41,8 @@ export function createK8sClients(
     kc,
     coreApi: kc.makeApiClient(k8s.CoreV1Api),
     appsApi: kc.makeApiClient(k8s.AppsV1Api),
+    networkingApi: kc.makeApiClient(k8s.NetworkingV1Api),
+    storageApi: kc.makeApiClient(k8s.StorageV1Api),
   };
 
   clientCache.set(key, clients);

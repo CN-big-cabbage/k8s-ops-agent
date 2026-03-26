@@ -6,15 +6,25 @@ OpenClaw 的 Kubernetes 运维插件，提供 K8s 资源管理工具。
 
 ## 功能特性
 
-### Skills（9 个工具）
+### Skills（14 个工具）
 
+#### 核心资源
 - **k8s-pod**: Pod 管理（列表、详情、日志、重启、状态）
 - **k8s-deploy**: Deployment 管理（列表、详情、扩缩容、滚动更新状态/历史/重启/回滚、更新镜像）
 - **k8s-node**: Node 管理（列表、详情、状态、封锁/解封、驱逐、污点、标签）
 - **k8s-svc**: Service 管理（列表、详情、端点查询、状态）
+- **k8s-config**: ConfigMap/Secret 管理（列表、详情、获取数据、创建、更新、删除）
+- **k8s-ingress**: Ingress 管理（列表、详情、路由规则、TLS 配置、注解、更新、删除）
+- **k8s-storage**: PVC/PV/StorageClass 管理（列表、详情、容量查询、创建、删除、扩容）
+- **k8s-namespace**: 命名空间操作（列表、详情、配额、限制、创建、删除）
+
+#### 运维操作
 - **k8s-exec**: 容器执行（执行命令、读取文件、列出目录、查看环境变量、进程列表、网络连通性检查）
+- **k8s-portforward**: 端口转发（创建、列表、关闭 Pod/Service 端口转发）
 - **k8s-logs**: 高级日志操作（搜索、多 Pod 聚合、时间范围过滤、对比、统计、导出）
 - **k8s-metrics**: 资源指标监控（Pod 资源、Node 资源、Pod 排行、Node 排行、命名空间用量、容量报告）
+
+#### 监控
 - **k8s-events**: 事件查询（列表、过滤、最近事件、导出）
 - **k8s-event-analysis**: 事件分析（时间线、异常检测、关联分析、健康摘要）
 
@@ -245,6 +255,126 @@ Agent 将使用：
 { "action": "capacity_report" }
 ```
 
+### ConfigMap/Secret 管理
+
+#### 查看 ConfigMap 数据
+
+```
+查看 app-config ConfigMap 的数据
+```
+
+```json
+{ "action": "get_cm_data", "namespace": "default", "configmap_name": "app-config" }
+```
+
+#### 获取 Secret 数据
+
+```
+获取 db-credentials Secret 中的数据库密码
+```
+
+```json
+{ "action": "get_secret_data", "namespace": "production", "secret_name": "db-credentials", "key": "password" }
+```
+
+### Ingress 管理
+
+#### 列出 Ingress
+
+```
+列出 production 命名空间的所有 Ingress
+```
+
+```json
+{ "action": "list", "namespace": "production" }
+```
+
+#### 查看路由规则
+
+```
+查看 api-ingress 的路由规则
+```
+
+```json
+{ "action": "rules", "namespace": "default", "ingress_name": "api-ingress" }
+```
+
+### 命名空间管理
+
+#### 资源摘要
+
+```
+查看 staging 命名空间的资源统计
+```
+
+```json
+{ "action": "summary", "namespace": "staging" }
+```
+
+#### 资源配额
+
+```
+检查 production 命名空间的资源配额
+```
+
+```json
+{ "action": "quota", "namespace": "production" }
+```
+
+### 端口转发
+
+#### 创建端口转发
+
+```
+将本地 8080 端口转发到 postgres Pod 的 5432 端口
+```
+
+```json
+{ "action": "create", "namespace": "default", "pod_name": "postgres-abc123", "local_port": 8080, "pod_port": 5432 }
+```
+
+#### 列出活跃转发
+
+```
+列出所有活跃的端口转发
+```
+
+```json
+{ "action": "list" }
+```
+
+### 存储管理
+
+#### 列出 PVC
+
+```
+列出 production 命名空间的所有 PVC
+```
+
+```json
+{ "action": "list_pvc", "namespace": "production" }
+```
+
+#### 查找使用 PVC 的 Pod
+
+```
+查找哪些 Pod 正在使用 data-pvc 卷
+```
+
+```json
+{ "action": "find_pods", "namespace": "default", "pvc_name": "data-pvc" }
+```
+
+#### 存储使用报告
+
+```
+生成存储使用报告
+```
+
+```json
+{ "action": "usage_report" }
+```
+
 ### 事件监控
 
 #### 查看告警事件
@@ -314,11 +444,11 @@ kubectl config use-context <your-context>
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   name: openclaw-ops
-  namespace: default
 rules:
+  # Pod 操作 (k8s-pod, k8s-exec, k8s-logs, k8s-portforward)
   - apiGroups: [""]
     resources: ["pods", "pods/log", "pods/exec"]
     verbs: ["get", "list", "watch", "create"]
@@ -328,18 +458,51 @@ rules:
   - apiGroups: [""]
     resources: ["pods/eviction"]
     verbs: ["create"]  # 用于节点驱逐
+  # Deployment 操作 (k8s-deploy)
   - apiGroups: ["apps"]
     resources: ["deployments", "replicasets"]
     verbs: ["get", "list", "patch", "update"]
+  # Node 操作 (k8s-node)
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "patch"]
+  # Service 操作 (k8s-svc)
   - apiGroups: [""]
     resources: ["services", "endpoints"]
     verbs: ["get", "list"]
+  # ConfigMap/Secret 操作 (k8s-config)
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create", "delete"]
+  # Ingress 操作 (k8s-ingress)
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  # 存储操作 (k8s-storage)
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "create", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list"]
+  # 命名空间操作 (k8s-namespace)
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "create", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["resourcequotas", "limitranges"]
+    verbs: ["get", "list", "create", "update"]
+  # 事件操作 (k8s-events, k8s-event-analysis)
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["get", "list"]
+  # 指标操作 (k8s-metrics)
   - apiGroups: ["metrics.k8s.io"]
     resources: ["pods", "nodes"]
     verbs: ["get", "list"]
@@ -362,9 +525,11 @@ npm test
 ## 安全提示
 
 - **restart** 操作会删除 pods。在生产环境中谨慎使用。
-- 在破坏性操作前始终验证命名空间和 pod 名称。
-- 考虑为生产环境的重启操作实施审批工作流。
-- 在 `logs/k8s-ops.log` 中审计所有操作（待实现）。
+- **delete namespace** 操作会删除命名空间中的所有资源，且不可逆。
+- Secret 数据默认部分遮掩显示，需指定 `key` 参数才能获取完整值。
+- PVC 删除可能导致数据丢失（取决于回收策略是否为 `Delete`）。
+- 在破坏性操作前始终验证命名空间和资源名称。
+- 考虑为生产环境操作实施审批工作流。
 
 ## 故障排查
 
@@ -394,11 +559,14 @@ kubectl get namespaces
 - [ ] 交互式 pod 选择（模糊搜索）
 - [ ] 日志流式传输（实时 tail）
 - [x] 资源指标集成（kubectl top）
-- [ ] ConfigMap/Secret 查看
+- [x] ConfigMap/Secret 管理
+- [x] 端口转发
+- [x] PVC/PV/StorageClass 管理
+- [x] 命名空间管理
+- [x] Ingress 管理
 - [ ] 与 Prometheus 集成获取指标
 - [ ] 告警集成（自动响应 pod 故障）
 - [ ] HPA（水平自动扩缩容）管理
-- [ ] PVC（持久卷声明）管理
 
 ## 贡献
 

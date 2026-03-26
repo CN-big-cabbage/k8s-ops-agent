@@ -6,15 +6,25 @@ Kubernetes operations plugin for OpenClaw, providing tools to manage K8s resourc
 
 ## Features
 
-### Skills (9 tools)
+### Skills (14 tools)
 
+#### Core Resources
 - **k8s-pod**: Pod management (list, describe, logs, restart, status)
 - **k8s-deploy**: Deployment management (list, describe, scale, rollout status/history/restart/undo, update-image)
 - **k8s-node**: Node management (list, describe, status, cordon, uncordon, drain, taints, labels)
 - **k8s-svc**: Service management (list, describe, endpoints, status)
+- **k8s-config**: ConfigMap/Secret management (list, describe, get data, create, update, delete)
+- **k8s-ingress**: Ingress management (list, describe, rules, TLS, annotations, update, delete)
+- **k8s-storage**: PVC/PV/StorageClass management (list, describe, capacity, create, delete, resize)
+- **k8s-namespace**: Namespace operations (list, describe, quota, limits, create, delete)
+
+#### Operations
 - **k8s-exec**: Container execution (exec, file_read, file_list, env, process_list, network_check)
+- **k8s-portforward**: Port forwarding (create, list, close port forwards to pods/services)
 - **k8s-logs**: Advanced log operations (search, multi_pod, since, compare, stats, export)
 - **k8s-metrics**: Resource metrics and monitoring (pod_resources, node_resources, top_pods, top_nodes, namespace_usage, capacity_report)
+
+#### Monitoring
 - **k8s-events**: Event querying (list, filter, recent, export)
 - **k8s-event-analysis**: Event analysis (timeline, anomaly, correlate, summary)
 
@@ -169,6 +179,115 @@ Agent will use:
 { "action": "capacity_report" }
 ```
 
+### ConfigMap/Secret Management
+
+```
+Show me the data in the app-config ConfigMap
+```
+
+Agent will use:
+```json
+{ "action": "get_cm_data", "namespace": "default", "configmap_name": "app-config" }
+```
+
+```
+Get the database password from db-credentials secret
+```
+
+Agent will use:
+```json
+{ "action": "get_secret_data", "namespace": "production", "secret_name": "db-credentials", "key": "password" }
+```
+
+### Ingress Management
+
+```
+List all ingresses in production
+```
+
+Agent will use:
+```json
+{ "action": "list", "namespace": "production" }
+```
+
+```
+Show routing rules for the api-ingress
+```
+
+Agent will use:
+```json
+{ "action": "rules", "namespace": "default", "ingress_name": "api-ingress" }
+```
+
+### Namespace Management
+
+```
+Show me a resource summary for the staging namespace
+```
+
+Agent will use:
+```json
+{ "action": "summary", "namespace": "staging" }
+```
+
+```
+Check resource quota for production namespace
+```
+
+Agent will use:
+```json
+{ "action": "quota", "namespace": "production" }
+```
+
+### Port Forwarding
+
+```
+Forward local port 8080 to the postgres pod on port 5432
+```
+
+Agent will use:
+```json
+{ "action": "create", "namespace": "default", "pod_name": "postgres-abc123", "local_port": 8080, "pod_port": 5432 }
+```
+
+```
+List all active port forwards
+```
+
+Agent will use:
+```json
+{ "action": "list" }
+```
+
+### Storage Management
+
+```
+List all PVCs in production
+```
+
+Agent will use:
+```json
+{ "action": "list_pvc", "namespace": "production" }
+```
+
+```
+Find which pods are using the data-pvc volume
+```
+
+Agent will use:
+```json
+{ "action": "find_pods", "namespace": "default", "pvc_name": "data-pvc" }
+```
+
+```
+Generate a storage usage report
+```
+
+Agent will use:
+```json
+{ "action": "usage_report" }
+```
+
 ### Event Monitoring
 
 ```
@@ -239,11 +358,11 @@ Ensure your kubeconfig has appropriate RBAC permissions:
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   name: openclaw-ops
-  namespace: default
 rules:
+  # Pod operations (k8s-pod, k8s-exec, k8s-logs, k8s-portforward)
   - apiGroups: [""]
     resources: ["pods", "pods/log", "pods/exec"]
     verbs: ["get", "list", "watch", "create"]
@@ -253,18 +372,51 @@ rules:
   - apiGroups: [""]
     resources: ["pods/eviction"]
     verbs: ["create"]  # For node drain
+  # Deployment operations (k8s-deploy)
   - apiGroups: ["apps"]
     resources: ["deployments", "replicasets"]
     verbs: ["get", "list", "patch", "update"]
+  # Node operations (k8s-node)
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "patch"]
+  # Service operations (k8s-svc)
   - apiGroups: [""]
     resources: ["services", "endpoints"]
     verbs: ["get", "list"]
+  # ConfigMap/Secret operations (k8s-config)
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create", "delete"]
+  # Ingress operations (k8s-ingress)
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  # Storage operations (k8s-storage)
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "create", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list"]
+  # Namespace operations (k8s-namespace)
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "create", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["resourcequotas", "limitranges"]
+    verbs: ["get", "list", "create", "update"]
+  # Event operations (k8s-events, k8s-event-analysis)
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["get", "list"]
+  # Metrics operations (k8s-metrics)
   - apiGroups: ["metrics.k8s.io"]
     resources: ["pods", "nodes"]
     verbs: ["get", "list"]
@@ -287,9 +439,11 @@ npm test
 ## Safety Notes
 
 - The **restart** action deletes pods. Use with caution in production.
-- Always verify namespace and pod name before destructive operations.
-- Consider implementing approval workflows for production restarts.
-- Audit all operations in `logs/k8s-ops.log` (TODO).
+- The **delete namespace** action removes all resources within the namespace. This is irreversible.
+- Secret data is partially masked by default. Use the `key` parameter to retrieve specific values.
+- PVC deletion may cause data loss if the reclaim policy is `Delete`.
+- Always verify namespace and resource name before destructive operations.
+- Consider implementing approval workflows for production operations.
 
 ## Troubleshooting
 
@@ -319,10 +473,14 @@ kubectl get namespaces
 - [ ] Interactive pod selection (fuzzy search)
 - [ ] Log streaming (real-time tail)
 - [x] Resource metrics integration (kubectl top)
-- [ ] ConfigMap/Secret viewing
-- [ ] Port forwarding
+- [x] ConfigMap/Secret management
+- [x] Port forwarding
+- [x] PVC/PV/StorageClass management
+- [x] Namespace management
+- [x] Ingress management
 - [ ] Integration with Prometheus for metrics
 - [ ] Alert integration (auto-respond to pod failures)
+- [ ] HPA (Horizontal Pod Autoscaler) management
 
 ## Contributing
 
