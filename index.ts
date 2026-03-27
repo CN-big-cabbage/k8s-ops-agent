@@ -20,11 +20,17 @@ import { registerK8sDaemonSetTools } from "./skills/k8s-daemonset/src/daemonset.
 import { registerK8sJobTools } from "./skills/k8s-job/src/job.js";
 import { registerK8sCronJobTools } from "./skills/k8s-cronjob/src/cronjob.js";
 import { registerK8sHpaTools } from "./skills/k8s-hpa/src/hpa.js";
+// Phase 3: Advanced ops skills
+import { registerK8sPdbTools } from "./skills/k8s-pdb/src/pdb.js";
+import { registerK8sCrdTools } from "./skills/k8s-crd/src/crd.js";
+import { registerK8sHealthTools } from "./skills/k8s-health/src/health.js";
+import { registerK8sTopologyTools } from "./skills/k8s-topology/src/topology.js";
+import { registerK8sCostTools } from "./skills/k8s-cost/src/cost.js";
 
 const plugin = {
   id: "k8s",
   name: "Kubernetes",
-  description: "Kubernetes operations plugin - 19 tools for K8s management",
+  description: "Kubernetes operations plugin - 24 tools for K8s management",
 
   async load(api: OpenClawPluginApi) {
     // Original 9 skills
@@ -52,7 +58,14 @@ const plugin = {
     registerK8sCronJobTools(api);
     registerK8sHpaTools(api);
 
-    api.log("K8s plugin loaded successfully - 19 skills registered");
+    // Phase 3: Advanced ops skills
+    registerK8sPdbTools(api);
+    registerK8sCrdTools(api);
+    registerK8sHealthTools(api);
+    registerK8sTopologyTools(api);
+    registerK8sCostTools(api);
+
+    api.log("K8s plugin loaded successfully - 24 skills registered");
   },
 };
 
