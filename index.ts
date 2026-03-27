@@ -14,11 +14,17 @@ import { registerK8sPortForwardTools } from "./skills/k8s-portforward/src/portfo
 import { registerK8sIngressTools } from "./skills/k8s-ingress/src/ingress.js";
 import { registerK8sStorageTools } from "./skills/k8s-storage/src/storage.js";
 import { registerK8sNamespaceTools } from "./skills/k8s-namespace/src/namespace.js";
+// Phase 1: Workload skills
+import { registerK8sStatefulSetTools } from "./skills/k8s-statefulset/src/statefulset.js";
+import { registerK8sDaemonSetTools } from "./skills/k8s-daemonset/src/daemonset.js";
+import { registerK8sJobTools } from "./skills/k8s-job/src/job.js";
+import { registerK8sCronJobTools } from "./skills/k8s-cronjob/src/cronjob.js";
+import { registerK8sHpaTools } from "./skills/k8s-hpa/src/hpa.js";
 
 const plugin = {
   id: "k8s",
   name: "Kubernetes",
-  description: "Kubernetes operations plugin - 14 tools for K8s management",
+  description: "Kubernetes operations plugin - 19 tools for K8s management",
 
   async load(api: OpenClawPluginApi) {
     // Original 9 skills
@@ -39,7 +45,14 @@ const plugin = {
     registerK8sStorageTools(api);
     registerK8sNamespaceTools(api);
 
-    api.log("K8s plugin loaded successfully - 14 skills registered");
+    // Phase 1: Workload skills
+    registerK8sStatefulSetTools(api);
+    registerK8sDaemonSetTools(api);
+    registerK8sJobTools(api);
+    registerK8sCronJobTools(api);
+    registerK8sHpaTools(api);
+
+    api.log("K8s plugin loaded successfully - 19 skills registered");
   },
 };
 
