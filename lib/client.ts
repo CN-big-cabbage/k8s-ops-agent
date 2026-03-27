@@ -9,6 +9,8 @@ export interface K8sClients {
   storageApi: k8s.StorageV1Api;
   batchApi: k8s.BatchV1Api;
   autoscalingApi: k8s.AutoscalingV2Api;
+  rbacApi: k8s.RbacAuthorizationV1Api;
+  policyApi: k8s.PolicyV1Api;
 }
 
 const clientCache = new Map<string, K8sClients>();
@@ -47,6 +49,8 @@ export function createK8sClients(
     storageApi: kc.makeApiClient(k8s.StorageV1Api),
     batchApi: kc.makeApiClient(k8s.BatchV1Api),
     autoscalingApi: kc.makeApiClient(k8s.AutoscalingV2Api),
+    rbacApi: kc.makeApiClient(k8s.RbacAuthorizationV1Api),
+    policyApi: kc.makeApiClient(k8s.PolicyV1Api),
   };
 
   clientCache.set(key, clients);
