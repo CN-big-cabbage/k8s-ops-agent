@@ -20,11 +20,15 @@ import { registerK8sDaemonSetTools } from "./skills/k8s-daemonset/src/daemonset.
 import { registerK8sJobTools } from "./skills/k8s-job/src/job.js";
 import { registerK8sCronJobTools } from "./skills/k8s-cronjob/src/cronjob.js";
 import { registerK8sHpaTools } from "./skills/k8s-hpa/src/hpa.js";
+// Phase 2: Security & RBAC skills
+import { registerK8sRbacTools } from "./skills/k8s-rbac/src/rbac.js";
+import { registerK8sNetPolTools } from "./skills/k8s-netpol/src/netpol.js";
+import { registerK8sSecurityTools } from "./skills/k8s-security/src/security.js";
 
 const plugin = {
   id: "k8s",
   name: "Kubernetes",
-  description: "Kubernetes operations plugin - 19 tools for K8s management",
+  description: "Kubernetes operations plugin - 22 tools for K8s management",
 
   async load(api: OpenClawPluginApi) {
     // Original 9 skills
@@ -52,7 +56,12 @@ const plugin = {
     registerK8sCronJobTools(api);
     registerK8sHpaTools(api);
 
-    api.log("K8s plugin loaded successfully - 19 skills registered");
+    // Phase 2: Security & RBAC skills
+    registerK8sRbacTools(api);
+    registerK8sNetPolTools(api);
+    registerK8sSecurityTools(api);
+
+    api.log("K8s plugin loaded successfully - 22 skills registered");
   },
 };
 
