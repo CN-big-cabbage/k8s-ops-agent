@@ -9,6 +9,7 @@ export interface K8sClients {
   storageApi: k8s.StorageV1Api;
   batchApi: k8s.BatchV1Api;
   autoscalingApi: k8s.AutoscalingV2Api;
+  policyApi: k8s.PolicyV1Api;
   customObjectsApi: k8s.CustomObjectsApi;
   apiextensionsApi: k8s.ApiextensionsV1Api;
 }
@@ -49,6 +50,7 @@ export function createK8sClients(
     storageApi: kc.makeApiClient(k8s.StorageV1Api),
     batchApi: kc.makeApiClient(k8s.BatchV1Api),
     autoscalingApi: kc.makeApiClient(k8s.AutoscalingV2Api),
+    policyApi: kc.makeApiClient(k8s.PolicyV1Api),
     customObjectsApi: kc.makeApiClient(k8s.CustomObjectsApi),
     apiextensionsApi: kc.makeApiClient(k8s.ApiextensionsV1Api),
   };
