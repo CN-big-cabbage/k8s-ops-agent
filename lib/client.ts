@@ -7,6 +7,13 @@ export interface K8sClients {
   appsApi: k8s.AppsV1Api;
   networkingApi: k8s.NetworkingV1Api;
   storageApi: k8s.StorageV1Api;
+  batchApi: k8s.BatchV1Api;
+  autoscalingApi: k8s.AutoscalingV2Api;
+  rbacApi: k8s.RbacAuthorizationV1Api;
+  policyApi: k8s.PolicyV1Api;
+  customObjectsApi: k8s.CustomObjectsApi;
+  apiextensionsApi: k8s.ApiextensionsV1Api;
+  objectApi: k8s.KubernetesObjectApi;
 }
 
 const clientCache = new Map<string, K8sClients>();
@@ -43,6 +50,13 @@ export function createK8sClients(
     appsApi: kc.makeApiClient(k8s.AppsV1Api),
     networkingApi: kc.makeApiClient(k8s.NetworkingV1Api),
     storageApi: kc.makeApiClient(k8s.StorageV1Api),
+    batchApi: kc.makeApiClient(k8s.BatchV1Api),
+    autoscalingApi: kc.makeApiClient(k8s.AutoscalingV2Api),
+    rbacApi: kc.makeApiClient(k8s.RbacAuthorizationV1Api),
+    policyApi: kc.makeApiClient(k8s.PolicyV1Api),
+    customObjectsApi: kc.makeApiClient(k8s.CustomObjectsApi),
+    apiextensionsApi: kc.makeApiClient(k8s.ApiextensionsV1Api),
+    objectApi: k8s.KubernetesObjectApi.makeApiClient(kc),
   };
 
   clientCache.set(key, clients);

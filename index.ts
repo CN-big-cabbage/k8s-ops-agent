@@ -14,11 +14,32 @@ import { registerK8sPortForwardTools } from "./skills/k8s-portforward/src/portfo
 import { registerK8sIngressTools } from "./skills/k8s-ingress/src/ingress.js";
 import { registerK8sStorageTools } from "./skills/k8s-storage/src/storage.js";
 import { registerK8sNamespaceTools } from "./skills/k8s-namespace/src/namespace.js";
+// Phase 1: Workload skills
+import { registerK8sStatefulSetTools } from "./skills/k8s-statefulset/src/statefulset.js";
+import { registerK8sDaemonSetTools } from "./skills/k8s-daemonset/src/daemonset.js";
+import { registerK8sJobTools } from "./skills/k8s-job/src/job.js";
+import { registerK8sCronJobTools } from "./skills/k8s-cronjob/src/cronjob.js";
+import { registerK8sHpaTools } from "./skills/k8s-hpa/src/hpa.js";
+// Phase 2: Security & RBAC skills
+import { registerK8sRbacTools } from "./skills/k8s-rbac/src/rbac.js";
+import { registerK8sNetPolTools } from "./skills/k8s-netpol/src/netpol.js";
+import { registerK8sSecurityTools } from "./skills/k8s-security/src/security.js";
+// Phase 3: Advanced ops skills
+import { registerK8sPdbTools } from "./skills/k8s-pdb/src/pdb.js";
+import { registerK8sCrdTools } from "./skills/k8s-crd/src/crd.js";
+import { registerK8sHealthTools } from "./skills/k8s-health/src/health.js";
+import { registerK8sTopologyTools } from "./skills/k8s-topology/src/topology.js";
+import { registerK8sCostTools } from "./skills/k8s-cost/src/cost.js";
+// Phase 4: Ecosystem integration skills
+import { registerK8sHelmTools } from "./skills/k8s-helm/src/helm.js";
+import { registerK8sYamlTools } from "./skills/k8s-yaml/src/yaml.js";
+import { registerK8sGatewayTools } from "./skills/k8s-gateway/src/gateway.js";
+import { registerK8sTroubleshootTools } from "./skills/k8s-troubleshoot/src/troubleshoot.js";
 
 const plugin = {
   id: "k8s",
   name: "Kubernetes",
-  description: "Kubernetes operations plugin - 14 tools for K8s management",
+  description: "Kubernetes operations plugin - 31 tools for K8s management",
 
   async load(api: OpenClawPluginApi) {
     // Original 9 skills
@@ -39,7 +60,32 @@ const plugin = {
     registerK8sStorageTools(api);
     registerK8sNamespaceTools(api);
 
-    api.log("K8s plugin loaded successfully - 14 skills registered");
+    // Phase 1: Workload skills
+    registerK8sStatefulSetTools(api);
+    registerK8sDaemonSetTools(api);
+    registerK8sJobTools(api);
+    registerK8sCronJobTools(api);
+    registerK8sHpaTools(api);
+
+    // Phase 2: Security & RBAC skills
+    registerK8sRbacTools(api);
+    registerK8sNetPolTools(api);
+    registerK8sSecurityTools(api);
+
+    // Phase 3: Advanced ops skills
+    registerK8sPdbTools(api);
+    registerK8sCrdTools(api);
+    registerK8sHealthTools(api);
+    registerK8sTopologyTools(api);
+    registerK8sCostTools(api);
+
+    // Phase 4: Ecosystem integration skills
+    registerK8sHelmTools(api);
+    registerK8sYamlTools(api);
+    registerK8sGatewayTools(api);
+    registerK8sTroubleshootTools(api);
+
+    api.log("K8s plugin loaded successfully - 31 skills registered");
   },
 };
 
