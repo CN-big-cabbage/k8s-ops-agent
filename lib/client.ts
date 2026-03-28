@@ -13,6 +13,7 @@ export interface K8sClients {
   policyApi: k8s.PolicyV1Api;
   customObjectsApi: k8s.CustomObjectsApi;
   apiextensionsApi: k8s.ApiextensionsV1Api;
+  objectApi: k8s.KubernetesObjectApi;
 }
 
 const clientCache = new Map<string, K8sClients>();
@@ -55,6 +56,7 @@ export function createK8sClients(
     policyApi: kc.makeApiClient(k8s.PolicyV1Api),
     customObjectsApi: kc.makeApiClient(k8s.CustomObjectsApi),
     apiextensionsApi: kc.makeApiClient(k8s.ApiextensionsV1Api),
+    objectApi: k8s.KubernetesObjectApi.makeApiClient(kc),
   };
 
   clientCache.set(key, clients);
