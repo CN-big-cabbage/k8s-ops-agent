@@ -93,28 +93,124 @@ rules:
 
 ## Step 1: 配置集群连接
 
-拿到测试集群的 kubeconfig 后：
+根据测试环境情况，选择以下任一方式连接集群。
+
+### 方式 A: 本地拷贝 kubeconfig（本地可直连 API Server）
 
 ```bash
-# 方式 A: 独立配置文件
+# 拷贝 kubeconfig 到本地
 cp /path/to/test-kubeconfig ~/.kube/config-test
 export KUBECONFIG=~/.kube/config-test
-
-# 方式 B: 合并到已有配置
-export KUBECONFIG=~/.kube/config:/path/to/test-kubeconfig
-kubectl config get-contexts
 
 # 验证连通性
 kubectl cluster-info
 kubectl get nodes
 ```
 
-确认输出中能看到集群节点且状态为 `Ready`。
+### 方式 B: 合并到已有 kubeconfig
+
+```bash
+export KUBECONFIG=~/.kube/config:/path/to/test-kubeconfig
+kubectl config get-contexts
+
+# 切换到测试集群 context
+kubectl config use-context <test-context-name>
+kubectl get nodes
+```
+
+### 方式 C: SSH 连接部署节点（本地无法直连 API Server）
+
+当本地网络无法直接访问集群 API Server 时，通过 SSH 连接到集群的部署节点（master 或运维跳板机）进行测试。
+
+**前提条件：**
+- 部署节点上已有 kubeconfig 和 kubectl
+- 部署节点上已安装 Node.js >= 18.x
+
+**Step C.1: SSH 登录部署节点**
+
+```bash
+# 登录部署节点（替换为实际 IP 和用户名）
+ssh <user>@<deploy-node-ip>
+
+# 验证集群连通性
+kubectl get nodes
+```
+
+**Step C.2: 在部署节点上安装插件**
+
+```bash
+# 克隆项目（或通过 scp 上传）
+git clone https://github.com/CN-big-cabbage/k8s-ops-agent.git
+cd k8s-ops-agent
+npm install
+
+# 或者从本地上传
+# (在本地执行) scp -r /Users/pangxubin/git/k8s-ops-agent <user>@<deploy-node-ip>:~/
+```
+
+**Step C.3: 在部署节点上配置 OpenClaw**
+
+```bash
+# 确认部署节点的 kubeconfig 路径（通常为默认路径）
+ls ~/.kube/config
+
+# 配置 OpenClaw 插件（kubeconfigPath 留空则使用默认路径）
+cat > ~/.openclaw/openclaw.json << 'CONF'
+{
+  "plugins": {
+    "entries": {
+      "k8s": {
+        "enabled": true
+      }
+    }
+  }
+}
+CONF
+
+# 启动 OpenClaw
+openclaw start
+```
+
+**Step C.4: 替代方案 - SSH 端口转发（在本地操作远程集群）**
+
+如果希望在本地运行 OpenClaw 但集群 API Server 不可直达，可以通过 SSH 隧道转发：
+
+```bash
+# 在本地建立 SSH 隧道，将远程 API Server 端口转发到本地
+# 假设 API Server 地址为 https://172.16.190.100:6443
+ssh -L 6443:172.16.190.100:6443 <user>@<deploy-node-ip> -N &
+
+# 修改本地 kubeconfig，将 server 地址改为 localhost
+# 拷贝远程 kubeconfig 到本地
+scp <user>@<deploy-node-ip>:~/.kube/config ~/.kube/config-test
+
+# 编辑 ~/.kube/config-test，将 server 字段改为:
+#   server: https://127.0.0.1:6443
+# (如果使用自签名证书，可能还需要设置 insecure-skip-tls-verify: true)
+
+export KUBECONFIG=~/.kube/config-test
+kubectl get nodes
+```
+
+> 注意：SSH 隧道方式下，如果集群使用自签名证书，需要在 kubeconfig 中添加
+> `insecure-skip-tls-verify: true` 或将远程的 CA 证书一并拷贝到本地。
+
+### 连接验证
+
+无论使用哪种方式，确认以下命令输出正常：
+
+```bash
+kubectl cluster-info
+kubectl get nodes
+kubectl get ns
+```
 
 记录以下信息供后续使用：
 
 ```
+连接方式:    [ ] 方式A  [ ] 方式B  [ ] 方式C (SSH直连/隧道)
 集群地址:    ___________________________
+部署节点IP:  ___________________________ (方式C填写)
 Context 名称: ___________________________
 K8s 版本:    ___________________________
 节点数量:    ___________________________
@@ -123,6 +219,8 @@ K8s 版本:    ___________________________
 ---
 
 ## Step 2: 配置 OpenClaw 插件
+
+> 如果使用 Step 1 方式 C 且在部署节点上操作，此步骤已在 C.3 中完成，可跳过。
 
 编辑 `~/.openclaw/openclaw.json`，将插件指向测试集群：
 
@@ -139,6 +237,8 @@ K8s 版本:    ___________________________
   }
 }
 ```
+
+> 如果 kubeconfig 在默认路径 `~/.kube/config` 且只有一个 context，可省略 `kubeconfigPath` 和 `defaultContext`。
 
 重启 OpenClaw：
 
