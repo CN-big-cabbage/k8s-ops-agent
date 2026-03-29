@@ -1,6 +1,16 @@
+export interface HostConfig {
+  name: string;
+  host: string;
+  port?: number;
+  username: string;
+  password?: string;
+  privateKeyPath?: string;
+}
+
 export interface PluginConfig {
   kubeconfigPath?: string;
   defaultContext?: string;
+  hosts?: HostConfig[];
 }
 
 export const MAX_OUTPUT_BYTES = 10 * 1024; // 10KB output limit

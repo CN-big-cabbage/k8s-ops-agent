@@ -3,7 +3,6 @@
   "skills": ["./skills"],
   "configSchema": {
     "type": "object",
-    "additionalProperties": false,
     "properties": {
       "kubeconfigPath": {
         "type": "string",
@@ -12,6 +11,22 @@
       "defaultContext": {
         "type": "string",
         "description": "Default Kubernetes context to use"
+      },
+      "hosts": {
+        "type": "array",
+        "description": "SSH target hosts for sys-monitor skill",
+        "items": {
+          "type": "object",
+          "required": ["name", "host", "username"],
+          "properties": {
+            "name": { "type": "string", "description": "Host display name" },
+            "host": { "type": "string", "description": "IP or hostname" },
+            "port": { "type": "number", "default": 22 },
+            "username": { "type": "string" },
+            "password": { "type": "string" },
+            "privateKeyPath": { "type": "string", "description": "Path to SSH private key" }
+          }
+        }
       }
     }
   }
