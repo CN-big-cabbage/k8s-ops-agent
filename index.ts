@@ -35,11 +35,13 @@ import { registerK8sHelmTools } from "./skills/k8s-helm/src/helm.js";
 import { registerK8sYamlTools } from "./skills/k8s-yaml/src/yaml.js";
 import { registerK8sGatewayTools } from "./skills/k8s-gateway/src/gateway.js";
 import { registerK8sTroubleshootTools } from "./skills/k8s-troubleshoot/src/troubleshoot.js";
+// Phase 5: System monitoring
+import { registerSysMonitorTools } from "./skills/sys-monitor/src/monitor.js";
 
 const plugin = {
   id: "k8s",
   name: "Kubernetes",
-  description: "Kubernetes operations plugin - 31 tools for K8s management",
+  description: "Kubernetes operations plugin - 32 tools for K8s management",
 
   async load(api: OpenClawPluginApi) {
     // Original 9 skills
@@ -85,7 +87,10 @@ const plugin = {
     registerK8sGatewayTools(api);
     registerK8sTroubleshootTools(api);
 
-    api.log("K8s plugin loaded successfully - 31 skills registered");
+    // Phase 5: System monitoring
+    registerSysMonitorTools(api);
+
+    api.log("K8s plugin loaded successfully - 32 skills registered");
   },
 };
 
