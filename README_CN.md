@@ -6,7 +6,7 @@ OpenClaw 的 Kubernetes 运维插件，提供 K8s 资源管理工具。
 
 ## 功能特性
 
-### Skills（14 个工具）
+### Skills（32 个工具）
 
 #### 核心资源
 - **k8s-pod**: Pod 管理（列表、详情、日志、重启、状态）
@@ -28,30 +28,95 @@ OpenClaw 的 Kubernetes 运维插件，提供 K8s 资源管理工具。
 - **k8s-events**: 事件查询（列表、过滤、最近事件、导出）
 - **k8s-event-analysis**: 事件分析（时间线、异常检测、关联分析、健康摘要）
 
+#### 工作负载管理
+- **k8s-statefulset**: StatefulSet 操作（列表、详情、状态、扩缩容、滚动重启/回滚、更新镜像）
+- **k8s-daemonset**: DaemonSet 操作（列表、详情、状态、滚动重启/回滚、更新镜像）
+- **k8s-job**: Job 操作（列表、详情、状态、日志、创建、删除）
+- **k8s-cronjob**: CronJob 操作（列表、详情、状态、暂停、恢复、触发、创建、删除）
+- **k8s-hpa**: HPA 操作（列表、详情、状态、创建、更新、删除）
+
+#### 安全与 RBAC
+- **k8s-rbac**: RBAC 操作（ServiceAccount/Role/ClusterRole/Binding 的列表和详情、权限检查、审计）
+- **k8s-netpol**: 网络策略操作（列表、详情、Pod 策略检查、创建、删除、审计）
+- **k8s-security**: 安全审计（镜像扫描、Pod 安全检查、RBAC 审计、Secret 审计）
+
+#### 高级运维
+- **k8s-pdb**: PodDisruptionBudget 操作（列表、详情、状态、创建、删除、保护检查）
+- **k8s-crd**: CRD 操作（列表、详情、自定义资源的获取和列举）
+- **k8s-health**: 集群健康检查（组件、节点、Pod、etcd、网络、综合报告）
+- **k8s-topology**: 集群拓扑（节点分布、Pod 放置、区域分布、亲和性分析）
+- **k8s-cost**: 成本分析（命名空间成本、节点成本、闲置资源、优化建议）
+
+#### 生态集成
+- **k8s-helm**: Helm 操作（列出 Release、详情、历史、Values、回滚）
+- **k8s-yaml**: YAML 管理（导出、校验、对比、应用、模板生成）
+- **k8s-gateway**: Gateway API 操作（列表、详情、路由、状态）
+- **k8s-troubleshoot**: 故障排查（诊断 Pod、Service、Node、网络、DNS）
+
+#### 系统监控
+- **sys-monitor**: 主机监控（通过 SSH 监控 CPU、内存、磁盘、网络、进程、系统信息）
+
 ## 安装
 
-1. 安装依赖：
+### 前提条件
+
+- 已安装并运行 [OpenClaw](https://docs.openclaw.ai/)
+- Node.js >= 18
+- 已安装 `kubectl`，且 `~/.kube/config` 中有有效的集群配置
+
+### 第一步：克隆仓库
 
 ```bash
-cd /Users/a123/.openclaw/extensions/k8s
+git clone https://github.com/CN-big-cabbage/k8s-ops-agent.git
+cd k8s-ops-agent
+```
+
+### 第二步：安装依赖
+
+```bash
 npm install
 ```
 
-2. 在 `openclaw.json` 中启用插件：
+### 第三步：创建必要的符号链接
 
-```json
-{
-  "plugins": {
-    "entries": {
-      "k8s": {
-        "enabled": true
-      }
-    }
-  }
-}
+插件依赖 OpenClaw 的 SDK 和 TypeBox，需要创建指向全局 OpenClaw 包的符号链接：
+
+```bash
+ln -s /usr/local/lib/node_modules/openclaw node_modules/openclaw
+mkdir -p node_modules/@sinclair
+ln -s /usr/local/lib/node_modules/openclaw/node_modules/@sinclair/typebox node_modules/@sinclair/typebox
 ```
 
-3. （可选）配置自定义 kubeconfig：
+> **提示：** 如果你的 OpenClaw 全局路径不同，运行 `npm root -g` 查找实际路径后调整。
+
+### 第四步：将插件安装到 OpenClaw
+
+```bash
+openclaw plugins install --link /path/to/k8s-ops-agent
+```
+
+使用 `--link` 标志会创建对本地目录的引用，代码更新后无需重新安装即可生效。
+
+### 第五步：验证插件已加载
+
+```bash
+openclaw plugins list | grep k8s
+```
+
+期望输出：
+```
+│ Kubernetes   │ k8s      │ openclaw │ loaded   │ ~/path/to/k8s-ops-agent/index.ts │ 1.8.0 │
+```
+
+### 第六步：重启 Gateway
+
+```bash
+openclaw gateway restart
+```
+
+### （可选）配置 kubeconfig 路径
+
+如果 kubeconfig 不在默认的 `~/.kube/config`，编辑 `~/.openclaw/openclaw.json`：
 
 ```json
 {
@@ -59,13 +124,24 @@ npm install
     "entries": {
       "k8s": {
         "enabled": true,
-        "kubeconfigPath": "/custom/path/to/kubeconfig",
-        "defaultContext": "prod-cluster"
+        "config": {
+          "kubeconfigPath": "/custom/path/to/kubeconfig",
+          "defaultContext": "prod-cluster"
+        }
       }
     }
   }
 }
 ```
+
+### 安装常见问题
+
+| 报错信息 | 原因 | 解决方案 |
+|----------|------|----------|
+| `Cannot find module 'openclaw/plugin-sdk'` | 缺少 openclaw 符号链接 | 重新创建符号链接（第三步） |
+| `plugin not found: k8s` | 未通过 CLI 安装 | 执行 `openclaw plugins install --link`（第四步） |
+| `missing register/activate export` | 插件入口方法错误 | 确保 `index.ts` 使用 `register()` 而非 `load()` |
+| `kubectl 未配置` | 没有 kubeconfig | 将 kubeconfig 复制到 `~/.kube/config` |
 
 ## 使用方法
 
@@ -564,9 +640,15 @@ kubectl get namespaces
 - [x] PVC/PV/StorageClass 管理
 - [x] 命名空间管理
 - [x] Ingress 管理
+- [x] HPA（水平自动扩缩容）管理
+- [x] StatefulSet / DaemonSet / Job / CronJob 管理
+- [x] RBAC / 网络策略 / 安全审计
+- [x] Helm / Gateway API / 故障排查
+- [x] 集群健康检查与拓扑分析
+- [x] 成本分析与优化建议
+- [x] SSH 主机系统监控
 - [ ] 与 Prometheus 集成获取指标
 - [ ] 告警集成（自动响应 pod 故障）
-- [ ] HPA（水平自动扩缩容）管理
 
 ## 贡献
 

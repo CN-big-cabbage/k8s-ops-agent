@@ -1,4 +1,6 @@
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import { emptyPluginConfigSchema } from "openclaw/plugin-sdk";
+import { Type } from "@sinclair/typebox";
 import { registerK8sPodTools } from "./skills/k8s-pod/src/pod.js";
 import { registerK8sDeployTools } from "./skills/k8s-deploy/src/deploy.js";
 import { registerK8sNodeTools } from "./skills/k8s-node/src/node.js";
@@ -38,59 +40,105 @@ import { registerK8sTroubleshootTools } from "./skills/k8s-troubleshoot/src/trou
 // Phase 5: System monitoring
 import { registerSysMonitorTools } from "./skills/sys-monitor/src/monitor.js";
 
+/**
+ * Adapter: wraps OpenClaw's registerTool API to provide the
+ * api.tools.register({ name, description, schema, handler }) interface
+ * that k8s skill files expect.
+ */
+function createApiAdapter(realApi: OpenClawPluginApi): OpenClawPluginApi {
+  const proxy = Object.create(realApi);
+
+  proxy.tools = {
+    register(opts: {
+      name: string;
+      description: string;
+      schema: unknown;
+      handler: (params: unknown) => Promise<unknown>;
+    }) {
+      realApi.registerTool({
+        name: opts.name,
+        label: opts.name,
+        description: opts.description,
+        parameters: Type.Any(),
+        async execute(_toolCallId: string, params: unknown) {
+          const result = await opts.handler(params);
+          const text = typeof result === "string" ? result : JSON.stringify(result, null, 2);
+          return {
+            content: [{ type: "text" as const, text }],
+            details: result,
+          };
+        },
+      });
+    },
+  };
+
+  proxy.getPluginConfig = (_id: string) => {
+    return (realApi as any).pluginConfig ?? undefined;
+  };
+
+  proxy.log = (msg: string) => {
+    realApi.logger?.info?.(msg);
+  };
+
+  return proxy;
+}
+
 const plugin = {
   id: "k8s",
   name: "Kubernetes",
   description: "Kubernetes operations plugin - 32 tools for K8s management",
+  configSchema: emptyPluginConfigSchema(),
 
-  async load(api: OpenClawPluginApi) {
+  register(api: OpenClawPluginApi) {
+    const adapted = createApiAdapter(api);
+
     // Original 9 skills
-    registerK8sPodTools(api);
-    registerK8sDeployTools(api);
-    registerK8sNodeTools(api);
-    registerK8sSvcTools(api);
-    registerK8sExecTools(api);
-    registerK8sLogsTools(api);
-    registerK8sMetricsTools(api);
-    registerK8sEventsTools(api);
-    registerK8sEventAnalysisTools(api);
+    registerK8sPodTools(adapted);
+    registerK8sDeployTools(adapted);
+    registerK8sNodeTools(adapted);
+    registerK8sSvcTools(adapted);
+    registerK8sExecTools(adapted);
+    registerK8sLogsTools(adapted);
+    registerK8sMetricsTools(adapted);
+    registerK8sEventsTools(adapted);
+    registerK8sEventAnalysisTools(adapted);
 
     // New skills (Phase 1 & 2)
-    registerK8sConfigTools(api);
-    registerK8sPortForwardTools(api);
-    registerK8sIngressTools(api);
-    registerK8sStorageTools(api);
-    registerK8sNamespaceTools(api);
+    registerK8sConfigTools(adapted);
+    registerK8sPortForwardTools(adapted);
+    registerK8sIngressTools(adapted);
+    registerK8sStorageTools(adapted);
+    registerK8sNamespaceTools(adapted);
 
     // Phase 1: Workload skills
-    registerK8sStatefulSetTools(api);
-    registerK8sDaemonSetTools(api);
-    registerK8sJobTools(api);
-    registerK8sCronJobTools(api);
-    registerK8sHpaTools(api);
+    registerK8sStatefulSetTools(adapted);
+    registerK8sDaemonSetTools(adapted);
+    registerK8sJobTools(adapted);
+    registerK8sCronJobTools(adapted);
+    registerK8sHpaTools(adapted);
 
     // Phase 2: Security & RBAC skills
-    registerK8sRbacTools(api);
-    registerK8sNetPolTools(api);
-    registerK8sSecurityTools(api);
+    registerK8sRbacTools(adapted);
+    registerK8sNetPolTools(adapted);
+    registerK8sSecurityTools(adapted);
 
     // Phase 3: Advanced ops skills
-    registerK8sPdbTools(api);
-    registerK8sCrdTools(api);
-    registerK8sHealthTools(api);
-    registerK8sTopologyTools(api);
-    registerK8sCostTools(api);
+    registerK8sPdbTools(adapted);
+    registerK8sCrdTools(adapted);
+    registerK8sHealthTools(adapted);
+    registerK8sTopologyTools(adapted);
+    registerK8sCostTools(adapted);
 
     // Phase 4: Ecosystem integration skills
-    registerK8sHelmTools(api);
-    registerK8sYamlTools(api);
-    registerK8sGatewayTools(api);
-    registerK8sTroubleshootTools(api);
+    registerK8sHelmTools(adapted);
+    registerK8sYamlTools(adapted);
+    registerK8sGatewayTools(adapted);
+    registerK8sTroubleshootTools(adapted);
 
     // Phase 5: System monitoring
-    registerSysMonitorTools(api);
+    registerSysMonitorTools(adapted);
 
-    api.log("K8s plugin loaded successfully - 32 skills registered");
+    api.logger?.info?.("K8s plugin loaded successfully - 32 skills registered");
   },
 };
 

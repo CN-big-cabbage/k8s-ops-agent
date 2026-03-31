@@ -6,7 +6,7 @@ Kubernetes operations plugin for OpenClaw, providing tools to manage K8s resourc
 
 ## Features
 
-### Skills (14 tools)
+### Skills (32 tools)
 
 #### Core Resources
 - **k8s-pod**: Pod management (list, describe, logs, restart, status)
@@ -28,30 +28,95 @@ Kubernetes operations plugin for OpenClaw, providing tools to manage K8s resourc
 - **k8s-events**: Event querying (list, filter, recent, export)
 - **k8s-event-analysis**: Event analysis (timeline, anomaly, correlate, summary)
 
+#### Workload Management
+- **k8s-statefulset**: StatefulSet operations (list, describe, status, scale, rollout restart/undo, update-image)
+- **k8s-daemonset**: DaemonSet operations (list, describe, status, rollout restart/undo, update-image)
+- **k8s-job**: Job operations (list, describe, status, logs, create, delete)
+- **k8s-cronjob**: CronJob operations (list, describe, status, suspend, resume, trigger, create, delete)
+- **k8s-hpa**: HPA operations (list, describe, status, create, update, delete)
+
+#### Security & RBAC
+- **k8s-rbac**: RBAC operations (list/describe ServiceAccounts, Roles, ClusterRoles, Bindings, who_can check, audit)
+- **k8s-netpol**: NetworkPolicy operations (list, describe, check pod policies, create, delete, audit)
+- **k8s-security**: Security audit (scan images, check pod security, RBAC audit, secrets audit)
+
+#### Advanced Ops
+- **k8s-pdb**: PodDisruptionBudget operations (list, describe, status, create, delete, check protection)
+- **k8s-crd**: CRD operations (list, describe, get/list custom resources)
+- **k8s-health**: Cluster health check (components, nodes, pods, etcd, networking, overall)
+- **k8s-topology**: Cluster topology (node distribution, pod placement, zone spread, affinity analysis)
+- **k8s-cost**: Cost analysis (namespace cost, node cost, idle resources, optimization suggestions)
+
+#### Ecosystem Integration
+- **k8s-helm**: Helm operations (list releases, describe, history, values, rollback)
+- **k8s-yaml**: YAML management (export, validate, diff, apply, template generation)
+- **k8s-gateway**: Gateway API operations (list, describe, routes, status)
+- **k8s-troubleshoot**: Troubleshooting (diagnose pods, services, nodes, networking, DNS)
+
+#### System Monitoring
+- **sys-monitor**: Host monitoring via SSH (CPU, memory, disk, network, processes, system info, overview)
+
 ## Installation
 
-1. Install dependencies:
+### Prerequisites
+
+- [OpenClaw](https://docs.openclaw.ai/) installed and running
+- Node.js >= 18
+- `kubectl` installed and a valid kubeconfig at `~/.kube/config`
+
+### Step 1: Clone the repository
 
 ```bash
-cd /Users/a123/.openclaw/extensions/k8s
+git clone https://github.com/CN-big-cabbage/k8s-ops-agent.git
+cd k8s-ops-agent
+```
+
+### Step 2: Install dependencies
+
+```bash
 npm install
 ```
 
-2. Enable the plugin in `openclaw.json`:
+### Step 3: Create required symlinks
 
-```json
-{
-  "plugins": {
-    "entries": {
-      "k8s": {
-        "enabled": true
-      }
-    }
-  }
-}
+The plugin depends on OpenClaw's SDK and TypeBox. Create symlinks to the global OpenClaw package:
+
+```bash
+ln -s /usr/local/lib/node_modules/openclaw node_modules/openclaw
+mkdir -p node_modules/@sinclair
+ln -s /usr/local/lib/node_modules/openclaw/node_modules/@sinclair/typebox node_modules/@sinclair/typebox
 ```
 
-3. (Optional) Configure custom kubeconfig:
+> **Note:** If the OpenClaw global path differs on your system, run `npm root -g` to find it and adjust the paths accordingly.
+
+### Step 4: Install plugin into OpenClaw
+
+```bash
+openclaw plugins install --link /path/to/k8s-ops-agent
+```
+
+The `--link` flag creates a reference to your local directory so updates take effect immediately without reinstalling.
+
+### Step 5: Verify plugin is loaded
+
+```bash
+openclaw plugins list | grep k8s
+```
+
+Expected output:
+```
+│ Kubernetes   │ k8s      │ openclaw │ loaded   │ ~/path/to/k8s-ops-agent/index.ts │ 1.8.0 │
+```
+
+### Step 6: Restart the gateway
+
+```bash
+openclaw gateway restart
+```
+
+### (Optional) Configure kubeconfig path
+
+If your kubeconfig is not at the default `~/.kube/config`, edit `~/.openclaw/openclaw.json`:
 
 ```json
 {
@@ -59,13 +124,24 @@ npm install
     "entries": {
       "k8s": {
         "enabled": true,
-        "kubeconfigPath": "/custom/path/to/kubeconfig",
-        "defaultContext": "prod-cluster"
+        "config": {
+          "kubeconfigPath": "/custom/path/to/kubeconfig",
+          "defaultContext": "prod-cluster"
+        }
       }
     }
   }
 }
 ```
+
+### Troubleshooting Installation
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `Cannot find module 'openclaw/plugin-sdk'` | Missing openclaw symlink | Recreate symlink (Step 3) |
+| `plugin not found: k8s` | Not installed via CLI | Run `openclaw plugins install --link` (Step 4) |
+| `missing register/activate export` | Wrong plugin entry method | Ensure `index.ts` uses `register()` not `load()` |
+| `kubectl not configured` | No kubeconfig | Copy kubeconfig to `~/.kube/config` |
 
 ## Usage
 
@@ -478,9 +554,15 @@ kubectl get namespaces
 - [x] PVC/PV/StorageClass management
 - [x] Namespace management
 - [x] Ingress management
+- [x] HPA (Horizontal Pod Autoscaler) management
+- [x] StatefulSet / DaemonSet / Job / CronJob management
+- [x] RBAC / NetworkPolicy / Security audit
+- [x] Helm / Gateway API / Troubleshooting
+- [x] Cluster health check and topology analysis
+- [x] Cost analysis and optimization
+- [x] Host system monitoring via SSH
 - [ ] Integration with Prometheus for metrics
 - [ ] Alert integration (auto-respond to pod failures)
-- [ ] HPA (Horizontal Pod Autoscaler) management
 
 ## Contributing
 
