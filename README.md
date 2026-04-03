@@ -14,25 +14,32 @@ Kubernetes operations plugin for OpenClaw. The repository provides 30+ K8s-focus
 
 ## Quick Start
 
-1. Install dependencies:
+1. Clone the repository:
+
+```bash
+git clone git@github.com:CN-big-cabbage/k8s-ops-agent.git
+cd k8s-ops-agent
+```
+
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-2. Install the plugin into OpenClaw:
+3. Install the plugin into OpenClaw:
 
 ```bash
 openclaw plugins install --link /path/to/k8s-ops-agent
 ```
 
-3. Ensure `kubectl` works with your target cluster:
+4. Ensure `kubectl` works with your target cluster:
 
 ```bash
 kubectl get nodes
 ```
 
-4. Restart OpenClaw if needed:
+5. Restart OpenClaw if needed:
 
 ```bash
 openclaw gateway restart

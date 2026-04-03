@@ -14,25 +14,32 @@
 
 ## 快速开始
 
-1. 安装依赖：
+1. 克隆仓库：
+
+```bash
+git clone git@github.com:CN-big-cabbage/k8s-ops-agent.git
+cd k8s-ops-agent
+```
+
+2. 安装依赖：
 
 ```bash
 npm install
 ```
 
-2. 将插件安装到 OpenClaw：
+3. 将插件安装到 OpenClaw：
 
 ```bash
 openclaw plugins install --link /path/to/k8s-ops-agent
 ```
 
-3. 确认当前 `kubectl` 已能访问目标集群：
+4. 确认当前 `kubectl` 已能访问目标集群：
 
 ```bash
 kubectl get nodes
 ```
 
-4. 必要时重启 OpenClaw：
+5. 必要时重启 OpenClaw：
 
 ```bash
 openclaw gateway restart
