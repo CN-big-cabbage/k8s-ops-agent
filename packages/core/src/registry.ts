@@ -39,7 +39,8 @@ export interface SkillDefinition {
   name: string;
   description: string;
   schema: ZodSchema;
-  handler: (params: unknown, config?: PluginConfig) => Promise<string>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handler: (params: any, config?: PluginConfig) => Promise<string>;
 }
 
 export const skillRegistry: SkillDefinition[] = [

@@ -78,7 +78,7 @@ function formatPodStatus(pod: k8s.V1Pod): string {
     const state = cs.state;
     let stateStr = "unknown";
     if (state?.running) {
-      stateStr = `Running (started ${formatAge(new Date(state.running.startedAt))})`;
+      stateStr = `Running (started ${formatAge(new Date(state.running.startedAt!))})`;
     } else if (state?.waiting) {
       stateStr = `Waiting (${state.waiting.reason || "unknown reason"})`;
     } else if (state?.terminated) {

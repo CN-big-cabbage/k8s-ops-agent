@@ -203,7 +203,7 @@ export async function handleK8sIngress(params: K8sIngressParams, pluginConfig?: 
         
         if (params.all_namespaces) {
           const response = await networkingApi.listIngressForAllNamespaces(
-            undefined, undefined, undefined, undefined, params.label_selector
+            undefined, undefined, undefined, undefined, params.label_selector as unknown as number
           );
           ingresses = response.body.items;
         } else {

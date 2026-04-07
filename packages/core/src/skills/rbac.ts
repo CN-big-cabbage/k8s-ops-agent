@@ -139,7 +139,7 @@ function formatBindingDescribe(
   name: string,
   scope: string,
   roleRef: k8s.V1RoleRef,
-  subjects: k8s.V1Subject[]
+  subjects: k8s.RbacV1Subject[]
 ): string {
   let result = `Name: ${name}\n`;
   result += `Scope: ${scope}\n`;
@@ -162,7 +162,7 @@ function formatBindingDescribe(
   return result;
 }
 
-function formatSubjects(subjects: k8s.V1Subject[] | undefined): string {
+function formatSubjects(subjects: k8s.RbacV1Subject[] | undefined): string {
   if (!subjects || subjects.length === 0) return "(none)";
   return subjects.map((s) => `${s.kind}/${s.name}`).join(", ");
 }

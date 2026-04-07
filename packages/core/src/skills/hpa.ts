@@ -265,7 +265,7 @@ export async function handleK8sHpa(
         await autoscalingApi.patchNamespacedHorizontalPodAutoscaler(
           params.hpa_name, namespace, patch,
           undefined, undefined, undefined, undefined,
-          { headers: { "Content-Type": "application/strategic-merge-patch+json" } }
+          { headers: { "Content-Type": "application/strategic-merge-patch+json" } } as unknown as boolean
         );
 
         return `HPA ${namespace}/${params.hpa_name} updated`;

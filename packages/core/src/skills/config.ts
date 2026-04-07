@@ -14,7 +14,7 @@ export const K8sConfigSchema = z.object({
   key: z.string().optional(),
   all_namespaces: z.boolean().optional(),
   label_selector: z.string().optional(),
-  data: z.record(z.string()).optional(),
+  data: z.record(z.string(), z.string()).optional(),
   secret_type: z.string().optional(),
   context: z.string().optional(),
 });
@@ -299,7 +299,7 @@ export async function handleK8sConfig(params: K8sConfigParams, pluginConfig?: Pl
         // Encode data to base64
         const encodedData: Record<string, string> = {};
         Object.entries(params.data).forEach(([k, v]) => {
-          encodedData[k] = Buffer.from(v).toString('base64');
+          encodedData[k] = Buffer.from(v as string).toString('base64');
         });
         
         const secret: k8s.V1Secret = {

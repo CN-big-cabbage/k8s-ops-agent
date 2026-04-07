@@ -31,7 +31,7 @@ export const K8sNodeSchema = z.object({
   value: z.string().optional(),
   effect: z.enum(["NoSchedule", "PreferNoSchedule", "NoExecute"]).optional(),
   // Label options
-  labels: z.record(z.string()).optional(),
+  labels: z.record(z.string(), z.string()).optional(),
   context: z.string().optional(),
 });
 

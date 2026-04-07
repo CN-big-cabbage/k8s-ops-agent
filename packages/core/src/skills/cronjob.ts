@@ -160,7 +160,7 @@ export async function handleK8sCronJob(
           params.cronjob_name, namespace,
           { spec: { suspend: shouldSuspend } },
           undefined, undefined, undefined, undefined,
-          { headers: { "Content-Type": "application/strategic-merge-patch+json" } }
+          { headers: { "Content-Type": "application/strategic-merge-patch+json" } } as unknown as boolean
         );
 
         const action = shouldSuspend ? "suspended" : "resumed";

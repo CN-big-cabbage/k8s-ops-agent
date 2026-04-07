@@ -13,7 +13,7 @@ export const K8sYamlSchema = z.object({
   yaml_content: z.string().optional(),
   clean: z.boolean().optional(),
   template_type: z.string().optional(),
-  template_params: z.record(z.string()).optional(),
+  template_params: z.record(z.string(), z.string()).optional(),
   context: z.string().optional(),
 });
 
@@ -85,7 +85,7 @@ async function readResource(
     metadata: { name, namespace },
   };
 
-  const response = await clients.objectApi.read(spec);
+  const response = await clients.objectApi.read(spec as k8s.KubernetesObject & { metadata: { name: string; namespace: string } });
   return response.body as unknown as Record<string, unknown>;
 }
 

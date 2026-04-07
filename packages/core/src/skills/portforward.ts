@@ -313,7 +313,7 @@ export async function handleK8sPortForward(params: K8sPortForwardParams, pluginC
             resolve(`Port ${params.local_port} error: ${err.message}`);
           });
           
-          socket.connect(params.local_port, '127.0.0.1');
+          socket.connect(params.local_port!, '127.0.0.1');
         });
       }
 

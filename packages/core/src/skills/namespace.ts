@@ -11,8 +11,8 @@ export const K8sNamespaceSchema = z.object({
   namespace: z.string().optional(),
   all_namespaces: z.boolean().optional(),
   label_selector: z.string().optional(),
-  labels: z.record(z.string()).optional(),
-  hard: z.record(z.string()).optional(),
+  labels: z.record(z.string(), z.string()).optional(),
+  hard: z.record(z.string(), z.string()).optional(),
   context: z.string().optional(),
 });
 
@@ -325,7 +325,7 @@ export async function handleK8sNamespace(params: K8sNamespaceParams, pluginConfi
             namespace: params.namespace,
           },
           spec: {
-            hard: params.hard as Record<string, k8s.IntOrString>,
+            hard: params.hard as { [key: string]: string },
           },
         };
 
