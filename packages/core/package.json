@@ -1,0 +1,31 @@
+{
+  "name": "@k8s-ops/core",
+  "version": "2.0.0",
+  "description": "Platform-agnostic Kubernetes operations SDK",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@kubernetes/client-node": "^0.21.0",
+    "js-yaml": "^4.1.1",
+    "ssh2": "^1.17.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.0.0",
+    "@types/ssh2": "^1.15.5",
+    "vitest": "^4.1.1"
+  }
+}
