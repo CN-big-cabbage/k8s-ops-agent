@@ -1,28 +1,15 @@
 {
-  "name": "@openclaw/k8s",
-  "version": "1.8.0",
-  "description": "OpenClaw Kubernetes operations plugin",
+  "name": "k8s-ops-agent",
+  "private": true,
   "type": "module",
-  "dependencies": {
-    "@kubernetes/client-node": "^0.21.0",
-    "js-yaml": "^4.1.1",
-    "ssh2": "^1.17.0",
-    "zod": "^4.3.6"
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "build": "turbo build",
+    "test": "turbo test",
+    "clean": "turbo clean"
   },
   "devDependencies": {
-    "@types/js-yaml": "^4.0.9",
-    "@types/node": "^20.0.0",
-    "@types/ssh2": "^1.15.5",
-    "typescript": "^6.0.2",
-    "vitest": "^4.1.1"
-  },
-  "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "openclaw": {
-    "extensions": [
-      "./index.ts"
-    ]
+    "turbo": "^2.5.0",
+    "typescript": "^6.0.2"
   }
 }

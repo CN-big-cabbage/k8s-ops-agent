@@ -1,0 +1,23 @@
+{
+  "name": "@k8s-ops/cli",
+  "version": "1.0.0",
+  "description": "Kubernetes operations CLI toolkit",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "k8s-ops": "./dist/bin/k8s-ops.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@k8s-ops/core": "workspace:*",
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^4.1.1"
+  }
+}
