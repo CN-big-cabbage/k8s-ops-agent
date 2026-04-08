@@ -7,7 +7,7 @@
     "build": "turbo build",
     "test": "turbo test",
     "clean": "turbo clean",
-    "publish:clawhub": "./scripts/publish.sh"
+    "release": "./scripts/release.sh"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
