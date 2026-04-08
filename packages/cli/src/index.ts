@@ -1,1 +1,1 @@
-// placeholder
+export { buildCli } from "./cli.js";
