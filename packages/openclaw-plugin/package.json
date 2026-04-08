@@ -1,5 +1,5 @@
 {
-  "name": "@k8s-ops/openclaw",
+  "name": "k8s-ops-plugin",
   "version": "2.0.0",
   "description": "OpenClaw Kubernetes operations plugin",
   "type": "module",
@@ -19,6 +19,12 @@
     "openclaw": ">=1.0.0"
   },
   "openclaw": {
-    "extensions": ["./dist/index.js"]
+    "extensions": ["./dist/index.js"],
+    "compat": {
+      "pluginApi": ">=2026.4.5"
+    },
+    "build": {
+      "openclawVersion": "2026.4.5"
+    }
   }
 }
