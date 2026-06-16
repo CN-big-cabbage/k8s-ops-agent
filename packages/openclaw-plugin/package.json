@@ -1,7 +1,7 @@
 {
   "name": "k8s-ops-plugin",
-  "version": "2.0.0",
-  "description": "OpenClaw Kubernetes operations plugin",
+  "version": "2.1.2",
+  "description": "OpenClaw Kubernetes operations plugin - 32 tools for K8s management",
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
@@ -13,13 +13,16 @@
     "@sinclair/typebox": "^0.34.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "typescript": "^6.0.3"
   },
   "peerDependencies": {
     "openclaw": ">=1.0.0"
   },
   "openclaw": {
-    "extensions": ["./dist/index.js"],
+    "extensions": [
+      "./dist/index.js"
+    ],
     "compat": {
       "pluginApi": ">=2026.4.5"
     },

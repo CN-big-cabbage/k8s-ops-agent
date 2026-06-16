@@ -1,7 +1,7 @@
 ---
-name: k8s-ops
+name: k8s-ops-plugin
 description: Kubernetes operations plugin — 32 tools for cluster management, monitoring, troubleshooting, and security auditing
-version: 2.1.1
+version: 2.1.2
 metadata:
   openclaw:
     requires:
@@ -10,7 +10,7 @@ metadata:
     homepage: https://github.com/CN-big-cabbage/k8s-ops-agent
 ---
 
-# k8s-ops
+# K8s Ops Plugin
 
 Kubernetes operations plugin for OpenClaw. Provides 32 tools covering the full lifecycle of K8s cluster management.
 
@@ -25,6 +25,10 @@ Kubernetes operations plugin for OpenClaw. Provides 32 tools covering the full l
 3. **操作风险**：exec、rollout、scale、restart、namespace 等操作可能对生产集群造成破坏性影响。请在执行前确认操作目标。
 
 4. **SSH 访问**：配置中的 `hosts` 字段用于 SSH 主机访问（sys-monitor 工具），请仅配置受信任的主机，避免在生产环境中使用密码认证。
+
+5. **参数验证**：所有工具接受任意参数并直接传递给处理程序。请确保参数正确，避免误操作。
+
+6. **依赖审查**：本插件的实际工具行为委托给 @k8s-ops/core。请在安装前审查该依赖的实现。
 
 ## Tools
 
@@ -60,3 +64,5 @@ Optional plugin config:
 2. **审计日志**：启用 Kubernetes 审计日志，记录所有操作
 3. **定期轮换**：定期轮换 kubeconfig 中的凭据和令牌
 4. **权限审查**：定期审查 RBAC 权限，移除不必要的权限
+5. **操作确认**：对于破坏性操作（如 delete、scale、restart），建议在执行前进行人工确认
+6. **命名空间限制**：建议限制插件只能访问特定的命名空间，避免集群级别的操作
