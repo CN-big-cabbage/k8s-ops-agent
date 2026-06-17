@@ -7,6 +7,7 @@ metadata:
     requires:
       bins:
         - kubectl
+    emoji: ☸️
     homepage: https://github.com/CN-big-cabbage/k8s-ops-agent
 ---
 
@@ -66,3 +67,4 @@ Optional plugin config:
 4. **权限审查**：定期审查 RBAC 权限，移除不必要的权限
 5. **操作确认**：对于破坏性操作（如 delete、scale、restart），建议在执行前进行人工确认
 6. **命名空间限制**：建议限制插件只能访问特定的命名空间，避免集群级别的操作
+
